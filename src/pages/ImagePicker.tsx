@@ -1,0 +1,269 @@
+import { useRef, useState } from 'react';
+import type { ImageItem } from '../types';
+
+interface Props {
+  images: ImageItem[];
+  addImages: (files: File[]) => void;
+  removeImage: (id: string) => void;
+  onConfirm: (selectedIds: Set<string>) => void;
+  loading?: boolean;
+  onBack?: () => void;
+  onCamera?: () => void;
+  autoCrop?: boolean;
+  onAutoCropChange?: (v: boolean) => void;
+}
+
+const FOLDERS = ['All Photos', 'Camera', 'Screenshots', 'Downloads', 'Favorites'];
+
+export default function ImagePicker({ images, addImages, onConfirm, loading, onBack, onCamera, autoCrop: autoCropProp, onAutoCropChange }: Props) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [folder, setFolder] = useState('All Photos');
+  // Ordered array to track selection order
+  const [selected, setSelected] = useState<string[]>([]);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
+  const [showLimitDialog, setShowLimitDialog] = useState(false);
+  const [autoCrop, setAutoCropLocal] = useState(autoCropProp ?? true);
+  const setAutoCrop = (v: boolean) => { setAutoCropLocal(v); onAutoCropChange?.(v); };
+  const [showCropSheet, setShowCropSheet] = useState(false);
+  const [rememberChoice, setRememberChoice] = useState(false);
+  const touchStartX = useRef<number>(0);
+
+  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []).filter((f) => f.type.startsWith('image/'));
+    if (files.length) addImages(files);
+    e.target.value = '';
+  };
+
+  const MAX_IMAGES = 100;
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      if (prev.includes(id)) return prev.filter((i) => i !== id);
+      if (prev.length >= MAX_IMAGES) {
+        setShowLimitDialog(true);
+        return prev;
+      }
+      return [...prev, id];
+    });
+  };
+
+  const isAllSelected = images.length > 0 && selected.length === images.length;
+
+  const toggleSelectAll = () => {
+    if (isAllSelected || selected.length === MAX_IMAGES) {
+      setSelected([]);
+    } else {
+      if (images.length > MAX_IMAGES) {
+        setShowLimitDialog(true);
+      }
+      setSelected(images.slice(0, MAX_IMAGES).map((img) => img.id));
+    }
+  };
+
+  const getOrder = (id: string): number => {
+    const idx = selected.indexOf(id);
+    return idx === -1 ? -1 : idx + 1;
+  };
+
+  return (
+    <div className="page">
+      <header className="topbar">
+        {onBack && <button className="btn-icon" onClick={onBack}>←</button>}
+        <h1 className="topbar-title">Select Images</h1>
+        <label className="select-all" onClick={toggleSelectAll}>
+          <span className={`checkbox ${isAllSelected ? 'checked' : ''}`}>
+            {isAllSelected ? '✓' : ''}
+          </span>
+          <span>All</span>
+        </label>
+      </header>
+
+      <div className="folder-dropdown-wrap">
+        <select
+          className="folder-dropdown"
+          value={folder}
+          onChange={(e) => setFolder(e.target.value)}
+        >
+          {FOLDERS.map((f) => (
+            <option key={f} value={f}>{f}</option>
+          ))}
+        </select>
+        <span className="dropdown-arrow">▾</span>
+      </div>
+
+      <div className="picker-grid">
+        {onCamera && (
+          <button className="add-card" onClick={onCamera}>
+            <span className="add-icon">📷</span>
+            <span>Camera</span>
+          </button>
+        )}
+
+        {images.map((img, idx) => {
+          const order = getOrder(img.id);
+          return (
+            <div
+              key={img.id}
+              className={`picker-thumb ${order > 0 ? 'selected' : ''}`}
+              onClick={() => toggleSelect(img.id)}
+            >
+              <img src={img.url} alt={img.name} />
+              <button className="picker-preview-btn" onClick={(e) => { e.stopPropagation(); setPreviewIndex(idx); }}>⤢</button>
+              {order > 0 && <span className="thumb-order">{order}</span>}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Bottom confirm bar */}
+      {selected.length > 0 && (
+        <div className="bottom-bar" style={{flexDirection:'column',gap:8,position:'absolute',bottom:0,left:0,right:0,zIndex:10}}>
+          <div className="picker-selected-strip">
+            {selected.map((id) => {
+              const img = images.find((i) => i.id === id);
+              if (!img) return null;
+              return (
+                <div key={id} className="picker-selected-thumb">
+                  <img src={img.url} alt={img.name} />
+                  <button className="picker-selected-remove" onClick={() => toggleSelect(id)}>✕</button>
+                </div>
+              );
+            })}
+          </div>
+          <button
+            className="btn-primary btn-confirm-full"
+            onClick={() => setShowCropSheet(true)}
+          >
+            Confirm ({selected.length})
+          </button>
+        </div>
+      )}
+
+      <input ref={inputRef} type="file" accept="image/*" multiple hidden onChange={handleFiles} />
+
+      {loading && (
+        <div className="loading-overlay">
+          <div className="loading-spinner" />
+          <p>Loading images...</p>
+        </div>
+      )}
+
+      {previewIndex !== null && images[previewIndex] && (
+        <div className="image-preview-overlay">
+          <header className="topbar" style={{background:'transparent',borderBottom:'none',position:'absolute',top:0,left:0,right:0,zIndex:3}}>
+            <button className="btn-icon" style={{color:'#fff'}} onClick={() => setPreviewIndex(null)}>←</button>
+            <h1 className="topbar-title" style={{color:'#fff'}}>All images</h1>
+            <label className="select-all" onClick={() => toggleSelect(images[previewIndex].id)}>
+              <span className={`checkbox ${selected.includes(images[previewIndex].id) ? 'checked' : ''}`}>
+                {selected.includes(images[previewIndex].id) ? '✓' : ''}
+              </span>
+            </label>
+          </header>
+          <div
+            style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',width:'100%',padding:16}}
+            onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+            onTouchEnd={(e) => {
+              const diff = e.changedTouches[0].clientX - touchStartX.current;
+              if (diff > 60 && previewIndex > 0) setPreviewIndex(previewIndex - 1);
+              else if (diff < -60 && previewIndex < images.length - 1) setPreviewIndex(previewIndex + 1);
+            }}
+          >
+            <img src={images[previewIndex].url} alt="Preview" className="image-preview-full" />
+          </div>
+          {selected.length > 0 && (
+            <div style={{position:'absolute',bottom:0,left:0,right:0,zIndex:3,background:'rgba(0,0,0,0.6)',padding:'8px 12px 12px'}}>
+              <div className="picker-selected-strip" style={{marginBottom:8}}>
+                {selected.map((id) => {
+                  const img = images.find((i) => i.id === id);
+                  if (!img) return null;
+                  return (
+                    <div key={id} className="picker-selected-thumb" onClick={() => { const idx = images.findIndex((i) => i.id === id); if (idx >= 0) setPreviewIndex(idx); }}>
+                      <img src={img.url} alt={img.name} />
+                      <button className="picker-selected-remove" onClick={(e) => { e.stopPropagation(); toggleSelect(id); }}>✕</button>
+                    </div>
+                  );
+                })}
+              </div>
+              <button className="btn-primary btn-confirm-full" onClick={() => { setPreviewIndex(null); onConfirm(new Set(selected)); }}>
+                Confirm ({selected.length})
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {showCropSheet && (
+        <>
+          <div className="sheet-backdrop" onClick={() => setShowCropSheet(false)} />
+          <div className="bottom-sheet">
+            <h2>Import Options</h2>
+            <div style={{display:'flex',gap:12,marginBottom:16}}>
+              {/* Original option */}
+              <button
+                style={{
+                  flex:1,padding:12,borderRadius:'var(--radius)',border:'2px solid',
+                  borderColor: !autoCrop ? 'var(--primary)' : 'var(--border)',
+                  background: !autoCrop ? 'rgba(108,92,231,0.1)' : 'var(--surface2)',
+                  cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:8
+                }}
+                onClick={() => setAutoCrop(false)}
+              >
+                <div style={{width:'100%',aspectRatio:'4/3',background:'#e8e8e8',borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',position:'relative'}}>
+                  {/* Simulated photo with scenery */}
+                  <div style={{width:'100%',height:'100%',background:'linear-gradient(180deg, #87CEEB 40%, #228B22 40%, #228B22 70%, #8B4513 70%)',position:'relative'}}>
+                    <div style={{position:'absolute',top:'15%',left:'20%',width:20,height:20,borderRadius:'50%',background:'#FFD700'}} />
+                  </div>
+                </div>
+                <span style={{fontSize:13,color: !autoCrop ? 'var(--primary)' : 'var(--text2)',fontWeight:500}}>Original</span>
+                <span style={{fontSize:10,color:'var(--text2)'}}>Keep as is</span>
+              </button>
+              {/* Auto Crop option */}
+              <button
+                style={{
+                  flex:1,padding:12,borderRadius:'var(--radius)',border:'2px solid',
+                  borderColor: autoCrop ? 'var(--primary)' : 'var(--border)',
+                  background: autoCrop ? 'rgba(108,92,231,0.1)' : 'var(--surface2)',
+                  cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:8
+                }}
+                onClick={() => setAutoCrop(true)}
+              >
+                <div style={{width:'100%',aspectRatio:'4/3',background:'#e8e8e8',borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',position:'relative'}}>
+                  {/* Simulated photo with document detected */}
+                  <div style={{width:'100%',height:'100%',background:'linear-gradient(135deg, #666 0%, #888 100%)',position:'relative',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    <div style={{width:'60%',height:'75%',background:'#fff',borderRadius:2,boxShadow:'0 1px 4px rgba(0,0,0,0.3)',border:'2px solid var(--primary)'}} />
+                    {/* Corner markers */}
+                    <div style={{position:'absolute',top:'10%',left:'18%',width:8,height:8,borderTop:'2px solid var(--primary)',borderLeft:'2px solid var(--primary)'}} />
+                    <div style={{position:'absolute',top:'10%',right:'18%',width:8,height:8,borderTop:'2px solid var(--primary)',borderRight:'2px solid var(--primary)'}} />
+                    <div style={{position:'absolute',bottom:'12%',left:'18%',width:8,height:8,borderBottom:'2px solid var(--primary)',borderLeft:'2px solid var(--primary)'}} />
+                    <div style={{position:'absolute',bottom:'12%',right:'18%',width:8,height:8,borderBottom:'2px solid var(--primary)',borderRight:'2px solid var(--primary)'}} />
+                  </div>
+                </div>
+                <span style={{fontSize:13,color: autoCrop ? 'var(--primary)' : 'var(--text2)',fontWeight:500}}>Auto Crop</span>
+                <span style={{fontSize:10,color:'var(--text2)'}}>Detect edges</span>
+              </button>
+            </div>
+            <label className="select-all" style={{marginBottom:16,justifyContent:'center'}} onClick={() => setRememberChoice(!rememberChoice)}>
+              <span className={`checkbox ${rememberChoice ? 'checked' : ''}`}>{rememberChoice ? '✓' : ''}</span>
+              <span style={{fontSize:12,color:'var(--text2)'}}>Remember my choice</span>
+            </label>
+            <button className="btn-primary btn-confirm-full" onClick={() => { setShowCropSheet(false); onConfirm(new Set(selected)); }}>
+              Continue
+            </button>
+          </div>
+        </>
+      )}
+
+      {showLimitDialog && (
+        <div className="dialog-overlay">
+          <div className="dialog">
+            <h2>Limit Reached</h2>
+            <p>You can select up to {MAX_IMAGES} images at a time.</p>
+            <div className="dialog-actions">
+              <button className="btn-primary" onClick={() => setShowLimitDialog(false)}>OK</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
