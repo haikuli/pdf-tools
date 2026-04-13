@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import type { ImageItem } from '../types';
 
 interface Props {
@@ -13,20 +13,58 @@ interface Props {
   onAutoCropChange?: (v: boolean) => void;
 }
 
-const FOLDERS = ['All Photos', 'Camera', 'Screenshots', 'Downloads', 'Favorites'];
+type FolderName = 'All Photos' | 'Camera' | 'Screenshots' | 'Downloads' | 'Favorites';
+const FOLDERS: FolderName[] = ['All Photos', 'Camera', 'Screenshots', 'Downloads', 'Favorites'];
+
+// Aspect ratios: [w, h]
+const RATIOS: Record<string, [number, number][]> = {
+  Camera: [[400,300],[300,400],[400,400],[350,250],[250,350],[400,300],[300,400],[350,450],[450,300],[400,300],[300,400],[400,300],[350,250],[250,350],[300,400],[400,300],[350,450],[450,300],[400,400],[300,400]],
+  Screenshots: [[390,844],[390,844],[390,844],[390,844],[390,844],[1024,768],[1024,768],[390,844],[390,844],[1024,768],[390,844],[390,844],[1024,768],[390,844],[390,844]],
+  Downloads: [[800,600],[600,800],[1200,630],[400,400],[800,450],[600,900],[1000,700],[500,500],[700,400],[800,600],[600,800],[1200,630],[400,400],[800,450],[600,900]],
+  Favorites: [[400,300],[300,400],[400,400],[350,250],[400,300],[300,400],[350,450],[400,300],[300,400],[400,400]],
+};
+
+function buildMockImages(folder: FolderName): ImageItem[] {
+  const prefix = folder === 'Camera' ? 'cam' : folder === 'Screenshots' ? 'ss' : folder === 'Downloads' ? 'dl' : folder === 'Favorites' ? 'fav' : 'all';
+  const ratios = RATIOS[folder] || [];
+  const count = folder === 'Camera' ? 20 : folder === 'Screenshots' ? 15 : folder === 'Downloads' ? 15 : folder === 'Favorites' ? 10 : 0;
+  return Array.from({ length: count }, (_, i) => {
+    const [w, h] = ratios[i % ratios.length] || [300, 400];
+    return {
+      id: `${prefix}-${i + 1}`,
+      file: new File([], `${prefix}_${i + 1}.jpg`),
+      url: `https://picsum.photos/seed/${prefix}${i + 1}/${w}/${h}`,
+      name: `${prefix}_${i + 1}.jpg`,
+      rotation: 0,
+      width: w,
+      height: h,
+    };
+  });
+}
+
+const FOLDER_IMAGES: Record<FolderName, ImageItem[]> = {
+  Camera: buildMockImages('Camera'),
+  Screenshots: buildMockImages('Screenshots'),
+  Downloads: buildMockImages('Downloads'),
+  Favorites: buildMockImages('Favorites'),
+  'All Photos': [],
+};
+// All Photos = combined
+FOLDER_IMAGES['All Photos'] = [...FOLDER_IMAGES.Camera, ...FOLDER_IMAGES.Screenshots, ...FOLDER_IMAGES.Downloads, ...FOLDER_IMAGES.Favorites];
+
+export const ALL_MOCK_IMAGES = FOLDER_IMAGES['All Photos'];
 
 export default function ImagePicker({ images, addImages, onConfirm, loading, onBack, onCamera, autoCrop: autoCropProp, onAutoCropChange }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [folder, setFolder] = useState('All Photos');
-  // Ordered array to track selection order
+  const [folder, setFolder] = useState<FolderName>('All Photos');
   const [selected, setSelected] = useState<string[]>([]);
-  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [showLimitDialog, setShowLimitDialog] = useState(false);
   const [autoCrop, setAutoCropLocal] = useState(autoCropProp ?? true);
   const setAutoCrop = (v: boolean) => { setAutoCropLocal(v); onAutoCropChange?.(v); };
   const [showCropSheet, setShowCropSheet] = useState(false);
   const [rememberChoice, setRememberChoice] = useState(false);
-  const touchStartX = useRef<number>(0);
+
+  const displayImages = useMemo(() => FOLDER_IMAGES[folder], [folder]);
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []).filter((f) => f.type.startsWith('image/'));
@@ -47,16 +85,18 @@ export default function ImagePicker({ images, addImages, onConfirm, loading, onB
     });
   };
 
-  const isAllSelected = images.length > 0 && selected.length === images.length;
+  const isAllSelected = displayImages.length > 0 && displayImages.every((img) => selected.includes(img.id));
 
   const toggleSelectAll = () => {
-    if (isAllSelected || selected.length === MAX_IMAGES) {
-      setSelected([]);
+    if (isAllSelected) {
+      setSelected((prev) => prev.filter((id) => !displayImages.some((img) => img.id === id)));
     } else {
-      if (images.length > MAX_IMAGES) {
+      const newIds = displayImages.map((img) => img.id).filter((id) => !selected.includes(id));
+      if (selected.length + newIds.length > MAX_IMAGES) {
         setShowLimitDialog(true);
+        return;
       }
-      setSelected(images.slice(0, MAX_IMAGES).map((img) => img.id));
+      setSelected((prev) => [...prev, ...newIds]);
     }
   };
 
@@ -82,10 +122,10 @@ export default function ImagePicker({ images, addImages, onConfirm, loading, onB
         <select
           className="folder-dropdown"
           value={folder}
-          onChange={(e) => setFolder(e.target.value)}
+          onChange={(e) => setFolder(e.target.value as FolderName)}
         >
           {FOLDERS.map((f) => (
-            <option key={f} value={f}>{f}</option>
+            <option key={f} value={f}>{f} ({FOLDER_IMAGES[f].length})</option>
           ))}
         </select>
         <span className="dropdown-arrow">▾</span>
@@ -99,7 +139,7 @@ export default function ImagePicker({ images, addImages, onConfirm, loading, onB
           </button>
         )}
 
-        {images.map((img, idx) => {
+        {displayImages.map((img) => {
           const order = getOrder(img.id);
           return (
             <div
@@ -108,7 +148,6 @@ export default function ImagePicker({ images, addImages, onConfirm, loading, onB
               onClick={() => toggleSelect(img.id)}
             >
               <img src={img.url} alt={img.name} />
-              <button className="picker-preview-btn" onClick={(e) => { e.stopPropagation(); setPreviewIndex(idx); }}>⤢</button>
               {order > 0 && <span className="thumb-order">{order}</span>}
             </div>
           );
@@ -120,7 +159,7 @@ export default function ImagePicker({ images, addImages, onConfirm, loading, onB
         <div className="bottom-bar" style={{flexDirection:'column',gap:8,position:'absolute',bottom:0,left:0,right:0,zIndex:10}}>
           <div className="picker-selected-strip">
             {selected.map((id) => {
-              const img = images.find((i) => i.id === id);
+              const img = displayImages.find((i) => i.id === id) || FOLDER_IMAGES['All Photos'].find((i) => i.id === id);
               if (!img) return null;
               return (
                 <div key={id} className="picker-selected-thumb">
@@ -148,57 +187,12 @@ export default function ImagePicker({ images, addImages, onConfirm, loading, onB
         </div>
       )}
 
-      {previewIndex !== null && images[previewIndex] && (
-        <div className="image-preview-overlay">
-          <header className="topbar" style={{background:'transparent',borderBottom:'none',position:'absolute',top:0,left:0,right:0,zIndex:3}}>
-            <button className="btn-icon" style={{color:'#fff'}} onClick={() => setPreviewIndex(null)}>←</button>
-            <h1 className="topbar-title" style={{color:'#fff'}}>All images</h1>
-            <label className="select-all" onClick={() => toggleSelect(images[previewIndex].id)}>
-              <span className={`checkbox ${selected.includes(images[previewIndex].id) ? 'checked' : ''}`}>
-                {selected.includes(images[previewIndex].id) ? '✓' : ''}
-              </span>
-            </label>
-          </header>
-          <div
-            style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',width:'100%',padding:16}}
-            onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
-            onTouchEnd={(e) => {
-              const diff = e.changedTouches[0].clientX - touchStartX.current;
-              if (diff > 60 && previewIndex > 0) setPreviewIndex(previewIndex - 1);
-              else if (diff < -60 && previewIndex < images.length - 1) setPreviewIndex(previewIndex + 1);
-            }}
-          >
-            <img src={images[previewIndex].url} alt="Preview" className="image-preview-full" />
-          </div>
-          {selected.length > 0 && (
-            <div style={{position:'absolute',bottom:0,left:0,right:0,zIndex:3,background:'rgba(0,0,0,0.6)',padding:'8px 12px 12px'}}>
-              <div className="picker-selected-strip" style={{marginBottom:8}}>
-                {selected.map((id) => {
-                  const img = images.find((i) => i.id === id);
-                  if (!img) return null;
-                  return (
-                    <div key={id} className="picker-selected-thumb" onClick={() => { const idx = images.findIndex((i) => i.id === id); if (idx >= 0) setPreviewIndex(idx); }}>
-                      <img src={img.url} alt={img.name} />
-                      <button className="picker-selected-remove" onClick={(e) => { e.stopPropagation(); toggleSelect(id); }}>✕</button>
-                    </div>
-                  );
-                })}
-              </div>
-              <button className="btn-primary btn-confirm-full" onClick={() => { setPreviewIndex(null); onConfirm(new Set(selected)); }}>
-                Confirm ({selected.length})
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
       {showCropSheet && (
         <>
           <div className="sheet-backdrop" onClick={() => setShowCropSheet(false)} />
           <div className="bottom-sheet">
             <h2>Import Options</h2>
             <div style={{display:'flex',gap:12,marginBottom:16}}>
-              {/* Original option */}
               <button
                 style={{
                   flex:1,padding:12,borderRadius:'var(--radius)',border:'2px solid',
@@ -209,7 +203,6 @@ export default function ImagePicker({ images, addImages, onConfirm, loading, onB
                 onClick={() => setAutoCrop(false)}
               >
                 <div style={{width:'100%',aspectRatio:'4/3',background:'#e8e8e8',borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',position:'relative'}}>
-                  {/* Simulated photo with scenery */}
                   <div style={{width:'100%',height:'100%',background:'linear-gradient(180deg, #87CEEB 40%, #228B22 40%, #228B22 70%, #8B4513 70%)',position:'relative'}}>
                     <div style={{position:'absolute',top:'15%',left:'20%',width:20,height:20,borderRadius:'50%',background:'#FFD700'}} />
                   </div>
@@ -217,7 +210,6 @@ export default function ImagePicker({ images, addImages, onConfirm, loading, onB
                 <span style={{fontSize:13,color: !autoCrop ? 'var(--primary)' : 'var(--text2)',fontWeight:500}}>Original</span>
                 <span style={{fontSize:10,color:'var(--text2)'}}>Keep as is</span>
               </button>
-              {/* Auto Crop option */}
               <button
                 style={{
                   flex:1,padding:12,borderRadius:'var(--radius)',border:'2px solid',
@@ -228,10 +220,8 @@ export default function ImagePicker({ images, addImages, onConfirm, loading, onB
                 onClick={() => setAutoCrop(true)}
               >
                 <div style={{width:'100%',aspectRatio:'4/3',background:'#e8e8e8',borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',position:'relative'}}>
-                  {/* Simulated photo with document detected */}
                   <div style={{width:'100%',height:'100%',background:'linear-gradient(135deg, #666 0%, #888 100%)',position:'relative',display:'flex',alignItems:'center',justifyContent:'center'}}>
                     <div style={{width:'60%',height:'75%',background:'#fff',borderRadius:2,boxShadow:'0 1px 4px rgba(0,0,0,0.3)',border:'2px solid var(--primary)'}} />
-                    {/* Corner markers */}
                     <div style={{position:'absolute',top:'10%',left:'18%',width:8,height:8,borderTop:'2px solid var(--primary)',borderLeft:'2px solid var(--primary)'}} />
                     <div style={{position:'absolute',top:'10%',right:'18%',width:8,height:8,borderTop:'2px solid var(--primary)',borderRight:'2px solid var(--primary)'}} />
                     <div style={{position:'absolute',bottom:'12%',left:'18%',width:8,height:8,borderBottom:'2px solid var(--primary)',borderLeft:'2px solid var(--primary)'}} />

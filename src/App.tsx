@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { ImageItem, PageSize, PageOrientation, FillMode, Alignment, Margin, Page, ScanFilter, WatermarkConfig, SignatureItem } from './types';
 import Home from './pages/Home';
-import ImagePicker from './pages/ImagePicker';
+import ImagePicker, { ALL_MOCK_IMAGES } from './pages/ImagePicker';
 import ImageEditor from './pages/ImageEditor';
 import PreviewGrid from './pages/PreviewGrid';
 import ConvertProgress from './pages/ConvertProgress';
@@ -22,20 +22,9 @@ import './App.css';
 let idCounter = 0;
 const genId = () => `img-${++idCounter}-${Date.now()}`;
 
-// Mock images using picsum.photos
-const MOCK_IMAGES: ImageItem[] = Array.from({ length: 50 }, (_, i) => ({
-  id: `mock-${i + 1}`,
-  file: new File([], `photo_${i + 1}.jpg`),
-  url: `https://picsum.photos/seed/img${i + 1}/${300 + (i % 3) * 50}/${300 + ((i + 1) % 3) * 50}`,
-  name: `photo_${i + 1}.jpg`,
-  rotation: 0,
-  width: 300 + (i % 3) * 50,
-  height: 300 + ((i + 1) % 3) * 50,
-}));
-
 export default function App() {
   const [page, setPage] = useState<Page>('home');
-  const [images, setImages] = useState<ImageItem[]>(MOCK_IMAGES);
+  const [images, setImages] = useState<ImageItem[]>([]);
   const [editorIndex, setEditorIndex] = useState(0);
   const [pageSize, setPageSize] = useState<PageSize>('A4');
   const [pageOrientation, setPageOrientation] = useState<PageOrientation>('portrait');
@@ -124,7 +113,7 @@ export default function App() {
 
   const handlePickerConfirm = (selectedIds: Set<string>) => {
     if (selectedIds.size === 0) return;
-    const selectedImages = MOCK_IMAGES.filter((img) => selectedIds.has(img.id));
+    const selectedImages = ALL_MOCK_IMAGES.filter((img) => selectedIds.has(img.id));
     if (addingFromEditor) {
       const newStartIndex = images.length;
       setImages((prev) => [...prev, ...selectedImages]);
@@ -161,7 +150,7 @@ export default function App() {
 
   const handleClose = () => {
     if (pdfUrl) URL.revokeObjectURL(pdfUrl);
-    setPdfBlob(null); setPdfUrl(''); setImages(MOCK_IMAGES); setPdfName('');
+    setPdfBlob(null); setPdfUrl(''); setImages([]); setPdfName('');
     setPage('home');
   };
 
@@ -189,7 +178,7 @@ export default function App() {
       {page === 'home' && <Home onNavigate={setPage} />}
 
       {page === 'picker' && (
-        <ImagePicker images={MOCK_IMAGES} addImages={addImages} removeImage={removeImage} onConfirm={handlePickerConfirm} loading={loading} onBack={() => { if (addingFromEditor) { setAddingFromEditor(false); setPage('editor'); } else { setPage('home'); } }} onCamera={() => setPage('picker-camera')} autoCrop={autoCropEnabled} onAutoCropChange={setAutoCropEnabled} />
+        <ImagePicker images={ALL_MOCK_IMAGES} addImages={addImages} removeImage={removeImage} onConfirm={handlePickerConfirm} loading={loading} onBack={() => { if (addingFromEditor) { setAddingFromEditor(false); setPage('editor'); } else { setPage('home'); } }} onCamera={() => setPage('picker-camera')} autoCrop={autoCropEnabled} onAutoCropChange={setAutoCropEnabled} />
       )}
       {page === 'picker-camera' && (
         <SimpleCamera onDone={(captured) => {
@@ -222,7 +211,7 @@ export default function App() {
           addImages={addImages}
           onDone={() => setPage('preview')}
           onBack={() => setPage('picker')}
-          onQuit={() => { setImages(MOCK_IMAGES); setPage('home'); }}
+          onQuit={() => { setImages([]); setPage('home'); }}
           onRetake={() => {
             const img = images[editorIndex];
             if (img) { setRetakeImageId(img.id); setPage('retake-camera'); }
