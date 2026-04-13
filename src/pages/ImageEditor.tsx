@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import type { ImageItem, PageSize, PageOrientation, FillMode, Alignment, Margin, WatermarkConfig, SignatureItem } from '../types';
+import type { ImageItem, PageSize, PageOrientation, FillMode, Margin } from '../types';
 import CropOverlay from '../components/CropOverlay';
-import SignaturePad from '../components/SignaturePad';
 
 interface Props {
   images: ImageItem[];
@@ -22,19 +21,14 @@ interface Props {
   pageOrientation?: PageOrientation;
   setPageOrientation?: (o: PageOrientation) => void;
   defaultFillMode?: FillMode;
-  defaultAlignment?: Alignment;
   defaultMargin?: Margin;
-  watermark?: WatermarkConfig;
-  setWatermark?: (w: WatermarkConfig) => void;
-  signatures?: SignatureItem[];
-  setSignatures?: (s: SignatureItem[] | ((prev: SignatureItem[]) => SignatureItem[])) => void;
-  onDefaultsChange?: (defaults: { fillMode?: FillMode; alignment?: Alignment; margin?: Margin }) => void;
+  onDefaultsChange?: (defaults: { fillMode?: FillMode; margin?: Margin }) => void;
 }
 
 export default function ImageEditor({
   images, currentIndex, setCurrentIndex,
   updateImage, removeImage, addImages, onDone, onBack, onQuit, onRetake, onAddImage, onScan, onReorder,
-  pageSize, setPageSize, pageOrientation, setPageOrientation, defaultFillMode = 'fit', defaultAlignment = 'center', defaultMargin = 'None', watermark, setWatermark, signatures: signaturesProp, setSignatures: setSignaturesProp, onDefaultsChange,
+  pageSize, setPageSize, pageOrientation, setPageOrientation, defaultFillMode = 'fit', defaultMargin = 'None', onDefaultsChange,
 }: Props) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showQuitDialog, setShowQuitDialog] = useState(false);
@@ -44,16 +38,10 @@ export default function ImageEditor({
   const [applyToAll, setApplyToAll] = useState(false);
   const [showLayoutSheet, setShowLayoutSheet] = useState(false);
   const [showOptionsSheet, setShowOptionsSheet] = useState(false);
-  const [showWatermarkSheet, setShowWatermarkSheet] = useState(false);
   const [showAddSheet, setShowAddSheet] = useState(false);
-  const [showSignaturePad, setShowSignaturePad] = useState(false);
-  const signatures = signaturesProp || [];
-  const setSignatures = setSignaturesProp || (() => {});
   const [applyOptionsToAll, setApplyOptionsToAll] = useState(false);
 
-  const closeAllSheets = () => { setShowFilter(false); setShowLayoutSheet(false); setShowOptionsSheet(false); setShowWatermarkSheet(false); setShowAddSheet(false); };
-  const [multiSelect, setMultiSelect] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const closeAllSheets = () => { setShowFilter(false); setShowLayoutSheet(false); setShowOptionsSheet(false); setShowAddSheet(false); };
   const cameraRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -101,7 +89,6 @@ export default function ImageEditor({
 
   // Per-image values with global defaults
   const fillMode = img.fillMode ?? defaultFillMode;
-  const alignment = img.alignment ?? defaultAlignment;
   const margin = img.margin ?? defaultMargin;
 
   const setFillMode = (f: FillMode) => {
@@ -109,13 +96,6 @@ export default function ImageEditor({
     if (applyOptionsToAll) {
       images.forEach((i) => i.id !== img.id && updateImage(i.id, { fillMode: f }));
       onDefaultsChange?.({ fillMode: f });
-    }
-  };
-  const setAlignment = (a: Alignment) => {
-    updateImage(img.id, { alignment: a });
-    if (applyOptionsToAll) {
-      images.forEach((i) => i.id !== img.id && updateImage(i.id, { alignment: a }));
-      onDefaultsChange?.({ alignment: a });
     }
   };
   const setMargin = (m: Margin) => {
@@ -139,67 +119,6 @@ export default function ImageEditor({
   };
 
   const handleRetake = () => onRetake ? onRetake() : cameraRef.current?.click();
-
-  const toggleSelectId = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
-
-  const [showMultiDeleteConfirm, setShowMultiDeleteConfirm] = useState(false);
-
-  const handleMultiDelete = () => {
-    setShowMultiDeleteConfirm(true);
-  };
-
-  const confirmMultiDelete = () => {
-    setShowMultiDeleteConfirm(false);
-    const remaining = images.length - selectedIds.size;
-    selectedIds.forEach((id) => removeImage(id));
-    setSelectedIds(new Set());
-    setMultiSelect(false);
-    if (remaining <= 0) onBack();
-    else if (currentIndex >= remaining) setCurrentIndex(remaining - 1);
-  };
-
-  const handleMultiRotate = () => {
-    selectedIds.forEach((id) => {
-      const image = images.find((i) => i.id === id);
-      if (image) updateImage(id, { rotation: (image.rotation + 90) % 360 });
-    });
-  };
-
-  let sigIdCounter = useRef(0);
-  const handleSignatureConfirm = (dataUrl: string) => {
-    setShowSignaturePad(false);
-    setSignatures((prev) => [...prev, {
-      id: `sig-${++sigIdCounter.current}`,
-      url: dataUrl,
-      x: 60, y: 75,
-      width: 25,
-      pageIndex: currentIndex,
-    }]);
-  };
-
-  const removeSignature = (id: string) => setSignatures((prev) => prev.filter((s) => s.id !== id));
-
-  const handleSigDrag = useCallback((id: string, e: React.PointerEvent) => {
-    e.preventDefault();
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    const wrap = wrapRef.current;
-    if (!wrap) return;
-    const rect = wrap.getBoundingClientRect();
-    const onMove = (ev: PointerEvent) => {
-      const x = ((ev.clientX - rect.left) / rect.width) * 100;
-      const y = ((ev.clientY - rect.top) / rect.height) * 100;
-      setSignatures((prev) => prev.map((s) => s.id === id ? { ...s, x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) } : s));
-    };
-    const onUp = () => { document.removeEventListener('pointermove', onMove); document.removeEventListener('pointerup', onUp); };
-    document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup', onUp);
-  }, []);
 
   const handleCameraFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []).filter((f) => f.type.startsWith('image/'));
@@ -291,52 +210,10 @@ export default function ImageEditor({
                 width: `calc(100% - ${marginPx * 2}px)`,
                 height: `calc(100% - ${marginPx * 2}px)`,
                 objectFit: fillMode === 'fill' ? 'cover' : fillMode === 'stretch' ? 'fill' : 'contain',
-                objectPosition: fillMode === 'fit'
-                  ? isLandscape
-                    ? (alignment === 'top' ? 'left center' : alignment === 'bottom' ? 'right center' : 'center center')
-                    : (alignment === 'top' ? 'center top' : alignment === 'bottom' ? 'center bottom' : 'center center')
-                  : 'center center',
               }}
             />
           </div>
         )}
-
-        {watermark?.enabled && watermark.text && !cropping && (
-          watermark.mode === 'tile' ? (
-            <div className="watermark-overlay watermark-tile" style={{
-              color: watermark.color,
-              opacity: watermark.opacity,
-              fontSize: watermark.fontSize * 0.3,
-              transform: `rotate(${watermark.angle}deg)`,
-            }}>
-              {Array.from({ length: 40 }, (_, i) => (
-                <span key={i} className="watermark-tile-item">{watermark.text}</span>
-              ))}
-            </div>
-          ) : (
-            <div className="watermark-overlay" style={{
-              fontSize: watermark.fontSize * 0.4,
-              color: watermark.color,
-              opacity: watermark.opacity,
-              transform: `rotate(${watermark.angle}deg)`,
-            }}>
-              {watermark.text}
-            </div>
-          )
-        )}
-
-        {/* Signatures on current page */}
-        {!cropping && signatures.filter((s) => s.pageIndex === currentIndex).map((sig) => (
-          <div
-            key={sig.id}
-            className="signature-on-page"
-            style={{ left: `${sig.x}%`, top: `${sig.y}%`, width: `${sig.width}%`, transform: 'translate(-50%, -50%)' }}
-            onPointerDown={(e) => handleSigDrag(sig.id, e)}
-          >
-            <img src={sig.url} alt="signature" style={{ width: '100%' }} />
-            <button className="sig-delete" onClick={(e) => { e.stopPropagation(); removeSignature(sig.id); }}>✕</button>
-          </div>
-        ))}
 
         {cropping && (
           <CropOverlay
@@ -348,30 +225,11 @@ export default function ImageEditor({
       </div>
 
       <div className="editor-nav-row">
-        {multiSelect ? (
-          <>
-            <span className="editor-page-indicator" style={{ color: 'var(--primary)', flex: 1 }}>{selectedIds.size} selected</span>
-            <label className="select-all" style={{ margin: 0 }} onClick={() => {
-              if (selectedIds.size === images.length) setSelectedIds(new Set());
-              else setSelectedIds(new Set(images.map((i) => i.id)));
-            }}>
-              <span className={`checkbox ${selectedIds.size === images.length ? 'checked' : ''}`}>{selectedIds.size === images.length ? '✓' : ''}</span>
-              <span style={{ fontSize: 12 }}>All</span>
-            </label>
-            <button className="btn-icon" style={{ fontSize: 14, padding: '2px 6px' }} onClick={() => { setMultiSelect(false); setSelectedIds(new Set()); }}>✕</button>
-          </>
-        ) : (
-          <>
-            <div className="editor-nav-center">
-              <button className="page-arrow" onClick={() => setCurrentIndex(currentIndex - 1)} disabled={currentIndex === 0 || cropping}>‹</button>
-              <span className="editor-page-indicator">{currentIndex + 1} / {images.length}</span>
-              <button className="page-arrow" onClick={() => setCurrentIndex(currentIndex + 1)} disabled={currentIndex >= images.length - 1 || cropping}>›</button>
-            </div>
-            {images.length > 1 && (
-              <button className="thumb-select-btn" onClick={() => setMultiSelect(true)}>✓</button>
-            )}
-          </>
-        )}
+        <div className="editor-nav-center">
+          <button className="page-arrow" onClick={() => setCurrentIndex(currentIndex - 1)} disabled={currentIndex === 0 || cropping}>‹</button>
+          <span className="editor-page-indicator">{currentIndex + 1} / {images.length}</span>
+          <button className="page-arrow" onClick={() => setCurrentIndex(currentIndex + 1)} disabled={currentIndex >= images.length - 1 || cropping}>›</button>
+        </div>
       </div>
 
       <div className="editor-thumb-strip">
@@ -379,24 +237,18 @@ export default function ImageEditor({
           {images.map((img, idx) => (
             <div
               key={img.id}
-              className={`editor-thumb ${!multiSelect && idx === currentIndex ? 'active' : ''} ${multiSelect && selectedIds.has(img.id) ? 'selected' : ''}`}
-              onClick={() => {
-                if (multiSelect) { toggleSelectId(img.id); }
-                else if (!cropping) { setCurrentIndex(idx); }
-              }}
+              className={`editor-thumb ${idx === currentIndex ? 'active' : ''}`}
+              onClick={() => !cropping && setCurrentIndex(idx)}
             >
               <img src={img.url} alt="" style={img.rotation ? { transform: `rotate(${img.rotation}deg)` } : undefined} />
-              {multiSelect && (
-                <span className={`thumb-check ${selectedIds.has(img.id) ? 'checked' : ''}`}>{selectedIds.has(img.id) ? '✓' : ''}</span>
-              )}
               <span className="editor-thumb-num">{idx + 1}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {(showFilter || showLayoutSheet || showOptionsSheet || showWatermarkSheet) && (
-        <div className="editor-sheet-backdrop" onClick={() => { setShowFilter(false); setShowLayoutSheet(false); setShowOptionsSheet(false); setShowWatermarkSheet(false); }} />
+      {(showFilter || showLayoutSheet || showOptionsSheet) && (
+        <div className="editor-sheet-backdrop" onClick={() => { setShowFilter(false); setShowLayoutSheet(false); setShowOptionsSheet(false); }} />
       )}
 
       <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -503,22 +355,14 @@ export default function ImageEditor({
                   <button className={`toggle-btn ${pageSize !== 'Auto' && fillMode === 'stretch' ? 'active' : ''}`} onClick={() => pageSize !== 'Auto' && setFillMode('stretch')} disabled={pageSize === 'Auto'}>Stretch</button>
                 </div>
               </div>
-              <div className={`layout-option-group ${pageSize === 'Auto' || fillMode !== 'fit' ? 'layout-disabled' : ''}`}>
-                <span className="layout-option-label">Align</span>
-                <div className="layout-toggle">
-                  <button className={`toggle-btn ${pageSize !== 'Auto' && fillMode === 'fit' && alignment === 'top' ? 'active' : ''}`} onClick={() => pageSize !== 'Auto' && fillMode === 'fit' && setAlignment('top')} disabled={pageSize === 'Auto' || fillMode !== 'fit'}>{isLandscape ? 'Left' : 'Top'}</button>
-                  <button className={`toggle-btn ${pageSize !== 'Auto' && fillMode === 'fit' && alignment === 'center' ? 'active' : ''}`} onClick={() => pageSize !== 'Auto' && fillMode === 'fit' && setAlignment('center')} disabled={pageSize === 'Auto' || fillMode !== 'fit'}>Center</button>
-                  <button className={`toggle-btn ${pageSize !== 'Auto' && fillMode === 'fit' && alignment === 'bottom' ? 'active' : ''}`} onClick={() => pageSize !== 'Auto' && fillMode === 'fit' && setAlignment('bottom')} disabled={pageSize === 'Auto' || fillMode !== 'fit'}>{isLandscape ? 'Right' : 'Bottom'}</button>
-                </div>
-              </div>
             </div>
             {images.length > 1 && (
               <label className="select-all" style={{ marginTop: 10, justifyContent: 'center' }} onClick={() => {
                 const newVal = !applyOptionsToAll;
                 setApplyOptionsToAll(newVal);
                 if (newVal) {
-                  images.forEach((i) => i.id !== img.id && updateImage(i.id, { fillMode, alignment, margin }));
-                  onDefaultsChange?.({ fillMode, alignment, margin });
+                  images.forEach((i) => i.id !== img.id && updateImage(i.id, { fillMode, margin }));
+                  onDefaultsChange?.({ fillMode, margin });
                 }
               }}>
                 <span className={`checkbox ${applyOptionsToAll ? 'checked' : ''}`}>{applyOptionsToAll ? '✓' : ''}</span>
@@ -528,104 +372,39 @@ export default function ImageEditor({
           </div>
         )}
 
-        {/* Watermark sheet */}
-        {showWatermarkSheet && watermark && setWatermark && (
-          <div className="editor-sheet">
-            <h2 style={{ marginBottom: 12 }}>Watermark</h2>
-            <div className="layout-compact-row">
-              <div className="layout-option-group">
-                <span className="layout-option-label">Enable</span>
-                <div className="layout-toggle">
-                  <button className={`toggle-btn ${watermark.enabled ? 'active' : ''}`} onClick={() => setWatermark({ ...watermark, enabled: true })}>On</button>
-                  <button className={`toggle-btn ${!watermark.enabled ? 'active' : ''}`} onClick={() => setWatermark({ ...watermark, enabled: false })}>Off</button>
-                </div>
-              </div>
-              <div className={`layout-option-group ${!watermark.enabled ? 'layout-disabled' : ''}`}>
-                <span className="layout-option-label">Mode</span>
-                <div className="layout-toggle">
-                  <button className={`toggle-btn ${watermark.mode === 'single' ? 'active' : ''}`} onClick={() => watermark.enabled && setWatermark({ ...watermark, mode: 'single' })} disabled={!watermark.enabled}>Single</button>
-                  <button className={`toggle-btn ${watermark.mode === 'tile' ? 'active' : ''}`} onClick={() => watermark.enabled && setWatermark({ ...watermark, mode: 'tile' })} disabled={!watermark.enabled}>Tile</button>
-                </div>
-              </div>
-              <div className={`layout-option-group ${!watermark.enabled ? 'layout-disabled' : ''}`}>
-                <span className="layout-option-label">Text</span>
-                <input
-                  type="text"
-                  className="watermark-input"
-                  value={watermark.text}
-                  onChange={(e) => setWatermark({ ...watermark, text: e.target.value })}
-                  placeholder="e.g. CONFIDENTIAL"
-                  disabled={!watermark.enabled}
-                />
-              </div>
-              <div className={`layout-option-group ${!watermark.enabled ? 'layout-disabled' : ''}`}>
-                <span className="layout-option-label">Size</span>
-                <input type="range" min="16" max="120" value={watermark.fontSize} onChange={(e) => setWatermark({ ...watermark, fontSize: Number(e.target.value) })} disabled={!watermark.enabled} style={{ flex: 1 }} />
-                <span style={{ fontSize: 11, color: 'var(--text2)', minWidth: 28, textAlign: 'right' }}>{watermark.fontSize}</span>
-              </div>
-              <div className={`layout-option-group ${!watermark.enabled ? 'layout-disabled' : ''}`}>
-                <span className="layout-option-label">Opacity</span>
-                <input type="range" min="0.05" max="0.5" step="0.05" value={watermark.opacity} onChange={(e) => setWatermark({ ...watermark, opacity: Number(e.target.value) })} disabled={!watermark.enabled} style={{ flex: 1 }} />
-                <span style={{ fontSize: 11, color: 'var(--text2)', minWidth: 28, textAlign: 'right' }}>{Math.round(watermark.opacity * 100)}%</span>
-              </div>
-              <div className={`layout-option-group ${!watermark.enabled ? 'layout-disabled' : ''}`}>
-                <span className="layout-option-label">Angle</span>
-                <input type="range" min="-90" max="90" value={watermark.angle} onChange={(e) => setWatermark({ ...watermark, angle: Number(e.target.value) })} disabled={!watermark.enabled} style={{ flex: 1 }} />
-                <span style={{ fontSize: 11, color: 'var(--text2)', minWidth: 28, textAlign: 'right' }}>{watermark.angle}°</span>
-              </div>
-              <div className={`layout-option-group ${!watermark.enabled ? 'layout-disabled' : ''}`}>
-                <span className="layout-option-label">Color</span>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  {['#000000', '#FF0000', '#0000FF', '#888888', '#FFFFFF'].map((c) => (
-                    <button key={c} className={`watermark-color ${watermark.color === c ? 'active' : ''}`} style={{ background: c }} onClick={() => watermark.enabled && setWatermark({ ...watermark, color: c })} disabled={!watermark.enabled} />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         <div className="bottom-bar editor-bar">
-          <button className="bar-btn" onClick={() => { closeAllSheets(); multiSelect ? handleMultiRotate() : handleRotate(); }} disabled={cropping || (multiSelect && selectedIds.size === 0)}>
+          <button className="bar-btn" onClick={() => { closeAllSheets(); handleRotate(); }} disabled={cropping}>
             <span className="bar-icon">↻</span><span>Rotate</span>
           </button>
-          <button className={`bar-btn ${cropping ? 'bar-btn-active' : ''}`} onClick={() => { closeAllSheets(); setCropping(!cropping); }} disabled={multiSelect}>
+          <button className={`bar-btn ${cropping ? 'bar-btn-active' : ''}`} onClick={() => { closeAllSheets(); setCropping(!cropping); }}>
             <span className="bar-icon">✂</span><span>Crop</span>
           </button>
-          <button className="bar-btn" onClick={() => { if (showFilter) { closeAllSheets(); } else { closeAllSheets(); setShowFilter(true); } }} disabled={cropping || multiSelect}>
+          <button className="bar-btn" onClick={() => { if (showFilter) { closeAllSheets(); } else { closeAllSheets(); setShowFilter(true); } }} disabled={cropping}>
             <span className="bar-icon">🎨</span><span>Filter</span>
           </button>
-          <button className="bar-btn" onClick={() => { closeAllSheets(); multiSelect ? handleMultiDelete() : handleRemove(); }} disabled={cropping || (multiSelect && selectedIds.size === 0)}>
+          <button className="bar-btn" onClick={() => { closeAllSheets(); handleRemove(); }} disabled={cropping}>
             <span className="bar-icon">🗑</span><span>Delete</span>
           </button>
           {onReorder && images.length > 1 && (
-            <button className="bar-btn" onClick={() => { closeAllSheets(); onReorder(); }} disabled={cropping || multiSelect}>
+            <button className="bar-btn" onClick={() => { closeAllSheets(); onReorder(); }} disabled={cropping}>
               <span className="bar-icon">⇅</span><span>Reorder</span>
             </button>
           )}
           {(onAddImage || onScan) && (
-            <button className="bar-btn" onClick={() => { if (showAddSheet) { closeAllSheets(); } else { closeAllSheets(); setShowAddSheet(true); } }} disabled={cropping || multiSelect}>
+            <button className="bar-btn" onClick={() => { if (showAddSheet) { closeAllSheets(); } else { closeAllSheets(); setShowAddSheet(true); } }} disabled={cropping}>
               <span className="bar-icon">＋</span><span>Add</span>
             </button>
           )}
           {setPageSize && (
-            <button className="bar-btn" onClick={() => { if (showLayoutSheet) { closeAllSheets(); } else { closeAllSheets(); setShowLayoutSheet(true); } }} disabled={cropping || multiSelect}>
+            <button className="bar-btn" onClick={() => { if (showLayoutSheet) { closeAllSheets(); } else { closeAllSheets(); setShowLayoutSheet(true); } }} disabled={cropping}>
               <span className="bar-icon"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="1" width="14" height="18" rx="1.5"/><line x1="6" y1="5" x2="14" y2="5"/><line x1="6" y1="8" x2="14" y2="8"/><line x1="6" y1="11" x2="10" y2="11"/></svg></span><span>Page Size</span>
             </button>
           )}
           {setPageSize && (
-            <button className="bar-btn" onClick={() => { if (showOptionsSheet) { closeAllSheets(); } else { closeAllSheets(); setShowOptionsSheet(true); } }} disabled={cropping || multiSelect}>
+            <button className="bar-btn" onClick={() => { if (showOptionsSheet) { closeAllSheets(); } else { closeAllSheets(); setShowOptionsSheet(true); } }} disabled={cropping}>
               <span className="bar-icon"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="2" y="2" width="16" height="16" rx="2"/><line x1="10" y1="6" x2="10" y2="14"/><line x1="6" y1="10" x2="14" y2="10"/><polyline points="8,7 10,5 12,7"/><polyline points="8,13 10,15 12,13"/></svg></span><span>Placement</span>
             </button>
           )}
-          {setWatermark && (
-            <button className="bar-btn" onClick={() => { if (showWatermarkSheet) { closeAllSheets(); } else { closeAllSheets(); setShowWatermarkSheet(true); } }} disabled={cropping || multiSelect}>
-              <span className="bar-icon"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M10 2 C10 2 8 6 8 9 C8 11.2 8.9 12 10 12 C11.1 12 12 11.2 12 9 C12 6 10 2 10 2Z"/><line x1="4" y1="15" x2="16" y2="15"/><line x1="6" y1="18" x2="14" y2="18"/></svg></span><span>Watermark</span>
-            </button>
-          )}
-          <button className="bar-btn" onClick={() => { closeAllSheets(); setShowSignaturePad(true); }} disabled={cropping || multiSelect}>
-            <span className="bar-icon"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 15 C5 12 8 10 11 13 C13 15 15 11 18 9"/><line x1="2" y1="18" x2="18" y2="18"/></svg></span><span>Sign</span>
-          </button>
         </div>
       </div>
 
@@ -666,19 +445,6 @@ export default function ImageEditor({
         </div>
       )}
 
-      {showMultiDeleteConfirm && (
-        <div className="dialog-overlay">
-          <div className="dialog">
-            <h2>Remove {selectedIds.size} Images?</h2>
-            <p>The selected images will be removed from your selection.</p>
-            <div className="dialog-actions">
-              <button className="btn-secondary" onClick={() => setShowMultiDeleteConfirm(false)}>Cancel</button>
-              <button className="btn-danger" onClick={confirmMultiDelete}>Remove</button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {showQuitDialog && (
         <div className="dialog-overlay">
           <div className="dialog">
@@ -693,13 +459,6 @@ export default function ImageEditor({
       )}
 
       <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden onChange={handleCameraFile} />
-
-      {showSignaturePad && (
-        <SignaturePad
-          onConfirm={handleSignatureConfirm}
-          onCancel={() => setShowSignaturePad(false)}
-        />
-      )}
     </div>
   );
 }

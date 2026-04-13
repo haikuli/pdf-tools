@@ -1,16 +1,13 @@
 import { useEffect, useState } from 'react';
 import { jsPDF } from 'jspdf';
-import type { ImageItem, PageSize, PageOrientation, FillMode, Alignment, Margin, WatermarkConfig, SignatureItem } from '../types';
+import type { ImageItem, PageSize, PageOrientation, FillMode, Margin } from '../types';
 
 interface Props {
   images: ImageItem[];
   pageSize: PageSize;
   pageOrientation: PageOrientation;
   defaultFillMode: FillMode;
-  defaultAlignment: Alignment;
   defaultMargin: Margin;
-  watermark: WatermarkConfig;
-  signatures: SignatureItem[];
   pdfName: string;
   onComplete: (blob: Blob) => void;
   onCancel?: () => void;
@@ -51,7 +48,7 @@ function getRotatedCanvas(img: HTMLImageElement, rotation: number): HTMLCanvasEl
   return canvas;
 }
 
-export default function ConvertProgress({ images, pageSize, pageOrientation, defaultFillMode, defaultAlignment, defaultMargin, watermark, signatures, pdfName, onComplete, onCancel, cancelTitle, cancelMessage }: Props) {
+export default function ConvertProgress({ images, pageSize, pageOrientation, defaultFillMode, defaultMargin, pdfName, onComplete, onCancel, cancelTitle, cancelMessage }: Props) {
   const [progress, setProgress] = useState(0);
   const [done, setDone] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
@@ -62,44 +59,6 @@ export default function ConvertProgress({ images, pageSize, pageOrientation, def
     async function generate() {
       const isAuto = pageSize === 'Auto';
       const [stdW, stdH] = getPageDimensions(pageSize);
-
-      const addWatermark = (doc: jsPDF, pw: number, ph: number) => {
-        if (!watermark.enabled || !watermark.text) return;
-        doc.saveGraphicsState();
-        const gState = new (doc as any).GState({ opacity: watermark.opacity });
-        doc.setGState(gState);
-        doc.setFontSize(watermark.fontSize);
-        doc.setTextColor(watermark.color);
-
-        if (watermark.mode === 'tile') {
-          const stepX = watermark.fontSize * watermark.text.length * 0.7;
-          const stepY = watermark.fontSize * 1.8;
-          for (let y = -ph; y < ph * 2; y += stepY) {
-            for (let x = -pw; x < pw * 2; x += stepX) {
-              doc.text(watermark.text, x, y, { angle: watermark.angle });
-            }
-          }
-        } else {
-          const cx = pw / 2;
-          const cy = ph / 2;
-          doc.text(watermark.text, cx, cy, { align: 'center', angle: watermark.angle });
-        }
-        doc.restoreGraphicsState();
-      };
-
-      const addSignatures = async (doc: jsPDF, pageIdx: number, pw: number, ph: number) => {
-        const pageSigs = signatures.filter((s) => s.pageIndex === pageIdx);
-        for (const sig of pageSigs) {
-          try {
-            const sigImg = await loadImage(sig.url);
-            const sigW = (sig.width / 100) * pw;
-            const sigH = sigW * (sigImg.height / sigImg.width);
-            const sigX = (sig.x / 100) * pw - sigW / 2;
-            const sigY = (sig.y / 100) * ph - sigH / 2;
-            doc.addImage(sig.url, 'PNG', sigX, sigY, sigW, sigH);
-          } catch { /* skip */ }
-        }
-      };
 
       // Pre-load all images
       const loaded: { canvas: HTMLCanvasElement; dataUrl: string }[] = [];
@@ -147,12 +106,9 @@ export default function ConvertProgress({ images, pageSize, pageOrientation, def
             doc.addPage([shorter, longer], orient);
           }
           doc.addImage(dataUrl, 'JPEG', marginPt, marginPt, imgW, imgH);
-          addWatermark(doc, pageW, pageH);
-          await addSignatures(doc, i, pageW, pageH);
         } else {
           // Fixed page size — per-image layout settings
           const imgFillMode = images[i]?.fillMode ?? defaultFillMode;
-          const imgAlignment = images[i]?.alignment ?? defaultAlignment;
           const imgMargin = images[i]?.margin ?? defaultMargin;
           const marginPt = imgMargin === 'Large' ? 36 : imgMargin === 'Small' ? 18 : 0;
 
@@ -177,15 +133,9 @@ export default function ConvertProgress({ images, pageSize, pageOrientation, def
             : imgFillMode === 'stretch' ? 1 : Math.min(availW / cw, availH / ch);
           const imgW = imgFillMode === 'stretch' ? availW : cw * scale;
           const imgH = imgFillMode === 'stretch' ? availH : ch * scale;
-          const x = orient === 'landscape'
-            ? (imgAlignment === 'top' ? marginPt : imgAlignment === 'bottom' ? marginPt + (availW - imgW) : marginPt + (availW - imgW) / 2)
-            : marginPt + (availW - imgW) / 2;
-          const y = orient === 'landscape'
-            ? marginPt + (availH - imgH) / 2
-            : (imgAlignment === 'top' ? marginPt : imgAlignment === 'bottom' ? marginPt + (availH - imgH) : marginPt + (availH - imgH) / 2);
+          const x = marginPt + (availW - imgW) / 2;
+          const y = marginPt + (availH - imgH) / 2;
           doc.addImage(dataUrl, 'JPEG', x, y, imgW, imgH);
-          addWatermark(doc, pw, ph);
-          await addSignatures(doc, i, pw, ph);
         }
 
         setProgress(50 + Math.round(((i + 1) / loaded.length) * 50));

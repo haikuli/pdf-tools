@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { ImageItem, PageSize, PageOrientation, FillMode, Alignment, Margin, Page, ScanFilter, WatermarkConfig, SignatureItem } from './types';
+import type { ImageItem, PageSize, PageOrientation, FillMode, Margin, Page, ScanFilter } from './types';
 import Home from './pages/Home';
 import ImagePicker, { ALL_MOCK_IMAGES } from './pages/ImagePicker';
 import ImageEditor from './pages/ImageEditor';
@@ -29,10 +29,7 @@ export default function App() {
   const [pageSize, setPageSize] = useState<PageSize>('A4');
   const [pageOrientation, setPageOrientation] = useState<PageOrientation>('portrait');
   const [fillMode, setFillMode] = useState<FillMode>('fit');
-  const [alignment, setAlignment] = useState<Alignment>('center');
   const [margin, setMargin] = useState<Margin>('None');
-  const [watermark, setWatermark] = useState<WatermarkConfig>({ enabled: false, text: '', fontSize: 48, color: '#000000', opacity: 0.15, angle: -45, mode: 'single' });
-  const [signatures, setSignatures] = useState<SignatureItem[]>([]);
   const [pdfName, setPdfName] = useState('');
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [pdfUrl, setPdfUrl] = useState('');
@@ -125,10 +122,7 @@ export default function App() {
       setPageSize('A4');
       setPageOrientation('portrait');
       setFillMode('fit');
-      setAlignment('center');
       setMargin('None');
-      setWatermark({ enabled: false, text: '', fontSize: 48, color: '#000000', opacity: 0.15, angle: -45, mode: 'single' });
-      setSignatures([]);
     }
     setPage('editor');
   };
@@ -195,7 +189,6 @@ export default function App() {
             setPageSize('A4');
             setPageOrientation('portrait');
             setFillMode('fit');
-            setAlignment('center');
             setMargin('None');
           }
           setPage('editor');
@@ -224,13 +217,8 @@ export default function App() {
           pageOrientation={pageOrientation}
           setPageOrientation={setPageOrientation}
           defaultFillMode={fillMode}
-          defaultAlignment={alignment}
           defaultMargin={margin}
-          watermark={watermark}
-          setWatermark={setWatermark}
-          signatures={signatures}
-          setSignatures={setSignatures}
-          onDefaultsChange={(d) => { if (d.fillMode) setFillMode(d.fillMode); if (d.alignment) setAlignment(d.alignment); if (d.margin) setMargin(d.margin); }}
+          onDefaultsChange={(d) => { if (d.fillMode) setFillMode(d.fillMode); if (d.margin) setMargin(d.margin); }}
         />
       )}
       {page === 'reorder' && (
@@ -255,7 +243,7 @@ export default function App() {
         <PreviewGrid images={images} addImages={addImages} removeImage={removeImage} onConvert={handleConvert} onBack={() => setPage('editor')} pageSize={pageSize} pageOrientation={pageOrientation} />
       )}
       {page === 'converting' && (
-        <ConvertProgress images={images} pageSize={pageSize} pageOrientation={pageOrientation} defaultFillMode={fillMode} defaultAlignment={alignment} defaultMargin={margin} watermark={watermark} signatures={signatures} pdfName={pdfName} onComplete={handleConvertComplete} onCancel={() => setPage('preview')} />
+        <ConvertProgress images={images} pageSize={pageSize} pageOrientation={pageOrientation} defaultFillMode={fillMode} defaultMargin={margin} pdfName={pdfName} onComplete={handleConvertComplete} onCancel={() => setPage('preview')} />
       )}
       {page === 'done' && pdfBlob && (
         <FinalStatus pdfName={pdfName} pdfUrl={pdfUrl} pdfBlob={pdfBlob} thumbnail={images[0]?.url} onClose={handleClose} />
@@ -291,7 +279,7 @@ export default function App() {
         <PreviewGrid images={scanImages} addImages={addScanImages} removeImage={removeScanImage} onConvert={handleScanConvert} onBack={() => setPage('scan-crop')} title="Preview" onTakePhoto={() => setPage('scan-capture')} />
       )}
       {page === 'scan-converting' && (
-        <ConvertProgress images={scanImages} pageSize={pageSize} pageOrientation={pageOrientation} defaultFillMode={fillMode} defaultAlignment={alignment} defaultMargin={margin} watermark={watermark} signatures={signatures} pdfName={pdfName} onComplete={handleScanConvertComplete} onCancel={() => setPage('scan-preview')} />
+        <ConvertProgress images={scanImages} pageSize={pageSize} pageOrientation={pageOrientation} defaultFillMode={fillMode} defaultMargin={margin} pdfName={pdfName} onComplete={handleScanConvertComplete} onCancel={() => setPage('scan-preview')} />
       )}
       {page === 'scan-done' && pdfBlob && (
         <FinalStatus pdfName={pdfName} pdfUrl={pdfUrl} pdfBlob={pdfBlob} thumbnail={scanImages[0]?.url} onClose={handleScanClose} />
