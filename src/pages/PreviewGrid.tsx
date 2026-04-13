@@ -14,7 +14,7 @@ interface Props {
 }
 
 export default function PreviewGrid({
-  images, removeImage,
+  images,
   onConvert, onBack, title, onTakePhoto, pageSize, pageOrientation,
 }: Props) {
   const [showNameSheet, setShowNameSheet] = useState(false);

@@ -6,7 +6,7 @@ type Mode = 'id-card' | 'passport' | 'single';
 type Step = 'notice' | 'guide' | 'shoot' | 'preview' | 'adjust' | 'naming' | 'progress' | 'done';
 type Side = 'front' | 'back';
 
-export default function IdCardScan({ onComplete, onBack }: Props) {
+export default function IdCardScan({ onComplete: _onComplete, onBack }: Props) {
   const [step, setStep] = useState<Step>('notice');
   const [mode, setMode] = useState<Mode>('id-card');
   const [modeConfirmed, setModeConfirmed] = useState(false);
@@ -287,7 +287,6 @@ export default function IdCardScan({ onComplete, onBack }: Props) {
   );
 
   // Adjust - full edit with crop, rotate, retake
-  const au=adjustIdx===0?frontUrl:backUrl;
 
   const handleAdjustCrop = (cropRect: { x: number; y: number; w: number; h: number }) => {
     if (!adjustCanvasRef.current) return;

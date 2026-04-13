@@ -13,7 +13,6 @@ type Point = { x: number; y: number };
 
 export default function CropOverlay({ containerRef, onApply, onCancel }: Props) {
   const [points, setPoints] = useState<Point[]>([]);
-  const [imgSize, setImgSize] = useState({ w: 0, h: 0, offX: 0, offY: 0 });
   const dragging = useRef<number | null>(null);
   const canUsePerspective = isOpenCVReady();
 
@@ -27,7 +26,6 @@ export default function CropOverlay({ containerRef, onApply, onCancel }: Props) 
     const offY = cRect.top - pRect.top;
     const w = cRect.width;
     const h = cRect.height;
-    setImgSize({ w, h, offX, offY });
     // Default: 4 corners at image edges
     const inset = 0;
     setPoints([
@@ -154,8 +152,6 @@ export default function CropOverlay({ containerRef, onApply, onCancel }: Props) 
   };
 
   if (points.length < 4) return null;
-
-  const polyStr = points.map((p) => `${p.x}px ${p.y}px`).join(', ');
 
   return (
     <div

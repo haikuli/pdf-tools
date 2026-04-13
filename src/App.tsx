@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { ImageItem, PageSize, PageOrientation, FillMode, Margin, Page, ScanFilter } from './types';
+import type { ImageItem, PageSize, PageOrientation, FillMode, Margin, Page } from './types';
 import Home from './pages/Home';
 import ImagePicker, { ALL_MOCK_IMAGES } from './pages/ImagePicker';
 import ImageEditor from './pages/ImageEditor';
@@ -9,8 +9,6 @@ import FinalStatus from './pages/FinalStatus';
 import ScanCapture from './pages/ScanCapture';
 import SimpleCamera from './pages/SimpleCamera';
 import ReorderPage from './pages/ReorderPage';
-import ScanCrop from './pages/ScanCrop';
-import ScanFilterPage from './pages/ScanFilter';
 import IdCardScan from './pages/IdCardScan';
 import PdfViewer from './pages/PdfViewer';
 import PdfToImage from './pages/PdfToImage';
@@ -42,7 +40,6 @@ export default function App() {
   // Scan state
   const [scanImages, setScanImages] = useState<ImageItem[]>([]);
   const [scanIndex, setScanIndex] = useState(0);
-  const [scanFilter, setScanFilter] = useState<ScanFilter>('magic');
   const [scanRetakeId, setScanRetakeId] = useState<string | null>(null);
 
   const addImages = useCallback((files: File[]) => {
@@ -97,15 +94,6 @@ export default function App() {
 
   const removeScanImage = useCallback((id: string) => {
     setScanImages((prev) => prev.filter((i) => i.id !== id));
-  }, []);
-
-  const reorderScanImages = useCallback((from: number, to: number) => {
-    setScanImages((prev) => {
-      const arr = [...prev];
-      const [moved] = arr.splice(from, 1);
-      arr.splice(to, 0, moved);
-      return arr;
-    });
   }, []);
 
   const handlePickerConfirm = (selectedIds: Set<string>) => {

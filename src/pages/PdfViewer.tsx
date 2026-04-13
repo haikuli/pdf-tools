@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 interface Props {
   fileName: string;
   onBack: () => void;

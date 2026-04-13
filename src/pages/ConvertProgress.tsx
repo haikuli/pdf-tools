@@ -58,7 +58,6 @@ export default function ConvertProgress({ images, pageSize, pageOrientation, def
 
     async function generate() {
       const isAuto = pageSize === 'Auto';
-      const [stdW, stdH] = getPageDimensions(pageSize);
 
       // Pre-load all images
       const loaded: { canvas: HTMLCanvasElement; dataUrl: string }[] = [];

@@ -54,15 +54,17 @@ FOLDER_IMAGES['All Photos'] = [...FOLDER_IMAGES.Camera, ...FOLDER_IMAGES.Screens
 
 export const ALL_MOCK_IMAGES = FOLDER_IMAGES['All Photos'];
 
-export default function ImagePicker({ images, addImages, onConfirm, loading, onBack, onCamera, autoCrop: autoCropProp, onAutoCropChange }: Props) {
+export default function ImagePicker({ addImages, onConfirm, loading, onBack, onCamera, autoCrop: autoCropProp, onAutoCropChange }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [folder, setFolder] = useState<FolderName>('All Photos');
   const [selected, setSelected] = useState<string[]>([]);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [showLimitDialog, setShowLimitDialog] = useState(false);
   const [autoCrop, setAutoCropLocal] = useState(autoCropProp ?? true);
   const setAutoCrop = (v: boolean) => { setAutoCropLocal(v); onAutoCropChange?.(v); };
   const [showCropSheet, setShowCropSheet] = useState(false);
   const [rememberChoice, setRememberChoice] = useState(false);
+  const touchStartX = useRef<number>(0);
 
   const displayImages = useMemo(() => FOLDER_IMAGES[folder], [folder]);
 
@@ -139,7 +141,7 @@ export default function ImagePicker({ images, addImages, onConfirm, loading, onB
           </button>
         )}
 
-        {displayImages.map((img) => {
+        {displayImages.map((img, idx) => {
           const order = getOrder(img.id);
           return (
             <div
@@ -148,6 +150,7 @@ export default function ImagePicker({ images, addImages, onConfirm, loading, onB
               onClick={() => toggleSelect(img.id)}
             >
               <img src={img.url} alt={img.name} />
+              <button className="picker-preview-btn" onClick={(e) => { e.stopPropagation(); setPreviewIndex(idx); }}>⤢</button>
               {order > 0 && <span className="thumb-order">{order}</span>}
             </div>
           );
@@ -184,6 +187,50 @@ export default function ImagePicker({ images, addImages, onConfirm, loading, onB
         <div className="loading-overlay">
           <div className="loading-spinner" />
           <p>Loading images...</p>
+        </div>
+      )}
+
+      {previewIndex !== null && displayImages[previewIndex] && (
+        <div className="image-preview-overlay">
+          <header className="topbar" style={{background:'transparent',borderBottom:'none',position:'absolute',top:0,left:0,right:0,zIndex:3}}>
+            <button className="btn-icon" style={{color:'#fff'}} onClick={() => setPreviewIndex(null)}>←</button>
+            <h1 className="topbar-title" style={{color:'#fff'}}>All images</h1>
+            <label className="select-all" onClick={() => toggleSelect(displayImages[previewIndex].id)}>
+              <span className={`checkbox ${selected.includes(displayImages[previewIndex].id) ? 'checked' : ''}`}>
+                {selected.includes(displayImages[previewIndex].id) ? '✓' : ''}
+              </span>
+            </label>
+          </header>
+          <div
+            style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',width:'100%',padding:16}}
+            onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+            onTouchEnd={(e) => {
+              const diff = e.changedTouches[0].clientX - touchStartX.current;
+              if (diff > 60 && previewIndex > 0) setPreviewIndex(previewIndex - 1);
+              else if (diff < -60 && previewIndex < displayImages.length - 1) setPreviewIndex(previewIndex + 1);
+            }}
+          >
+            <img src={displayImages[previewIndex].url} alt="Preview" className="image-preview-full" />
+          </div>
+          {selected.length > 0 && (
+            <div style={{position:'absolute',bottom:0,left:0,right:0,zIndex:3,background:'rgba(0,0,0,0.6)',padding:'8px 12px 12px'}}>
+              <div className="picker-selected-strip" style={{marginBottom:8}}>
+                {selected.map((id) => {
+                  const img = displayImages.find((i) => i.id === id) || ALL_MOCK_IMAGES.find((i) => i.id === id);
+                  if (!img) return null;
+                  return (
+                    <div key={id} className="picker-selected-thumb" onClick={() => { const i = displayImages.findIndex((x) => x.id === id); if (i >= 0) setPreviewIndex(i); }}>
+                      <img src={img.url} alt={img.name} />
+                      <button className="picker-selected-remove" onClick={(e) => { e.stopPropagation(); toggleSelect(id); }}>✕</button>
+                    </div>
+                  );
+                })}
+              </div>
+              <button className="btn-primary btn-confirm-full" onClick={() => { setPreviewIndex(null); onConfirm(new Set(selected)); }}>
+                Confirm ({selected.length})
+              </button>
+            </div>
+          )}
         </div>
       )}
 

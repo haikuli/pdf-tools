@@ -27,7 +27,7 @@ interface Props {
 
 export default function ImageEditor({
   images, currentIndex, setCurrentIndex,
-  updateImage, removeImage, addImages, onDone, onBack, onQuit, onRetake, onAddImage, onScan, onReorder,
+  updateImage, removeImage, addImages, onDone, onBack, onQuit, onRetake: _onRetake, onAddImage, onScan, onReorder,
   pageSize, setPageSize, pageOrientation, setPageOrientation, defaultFillMode = 'fit', defaultMargin = 'None', onDefaultsChange,
 }: Props) {
   const [showConfirm, setShowConfirm] = useState(false);
@@ -118,8 +118,6 @@ export default function ImageEditor({
     if (images.length <= 1) onBack();
   };
 
-  const handleRetake = () => onRetake ? onRetake() : cameraRef.current?.click();
-
   const handleCameraFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []).filter((f) => f.type.startsWith('image/'));
     if (files.length) addImages(files);
@@ -160,7 +158,6 @@ export default function ImageEditor({
 
   // PDF page preview dimensions
   const showPageFrame = !!pageSize && pageSize !== 'Auto' && !cropping;
-  const showMarginFrame = !showPageFrame && !!margin && margin !== 'None' && !cropping;
   const marginPx = margin === 'Large' ? 24 : margin === 'Small' ? 12 : 0;
   const isLandscape = pageOrientation === 'landscape';
   const pageAspects: Record<string, number> = {
@@ -305,7 +302,7 @@ export default function ImageEditor({
                 const items: { key: string; orient: 'portrait' | 'landscape' | null; label: string; desc: string; aspect: number; h: number }[] = [
                   { key: 'Auto', orient: null, label: 'Fit', desc: 'Auto', aspect: 0, h: 44 },
                 ];
-                for (const [key, label, desc] of sizes) {
+                for (const [key, label] of sizes) {
                   const a = aspects[key];
                   const h = Math.round((heights[key] / maxH) * 52);
                   items.push({ key, orient: 'portrait', label, desc: 'Portrait', aspect: a, h });
