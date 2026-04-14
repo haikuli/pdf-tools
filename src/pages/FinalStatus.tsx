@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 interface Props {
   pdfName: string;
   pdfUrl: string;
@@ -9,9 +11,27 @@ interface Props {
 export default function FinalStatus({ pdfName, pdfUrl, pdfBlob, thumbnail, onClose }: Props) {
   const fileName = `${pdfName}.pdf`;
   const fileSize = (pdfBlob.size / 1024).toFixed(1);
+  const [showPreview, setShowPreview] = useState(false);
 
   const handleOpen = () => {
-    window.open(pdfUrl, '_blank');
+    // Try new tab first
+    try {
+      const newTab = window.open('', '_blank');
+      if (newTab) {
+        newTab.document.write(`
+          <html><head><title>${fileName}</title></head>
+          <body style="margin:0;padding:0;overflow:hidden">
+          <embed src="${pdfUrl}" type="application/pdf" width="100%" height="100%" style="position:absolute;inset:0" />
+          </body></html>
+        `);
+        newTab.document.close();
+        return;
+      }
+    } catch {
+      // fallback
+    }
+    // Fallback: in-app preview
+    setShowPreview(true);
   };
 
   const handleShare = async () => {
@@ -20,20 +40,31 @@ export default function FinalStatus({ pdfName, pdfUrl, pdfBlob, thumbnail, onClo
       try {
         await navigator.share({ files: [file], title: pdfName });
       } catch {
-        // User cancelled or not supported
-        handleDownload();
+        downloadFile();
       }
     } else {
-      handleDownload();
+      downloadFile();
     }
   };
 
-  const handleDownload = () => {
+  const downloadFile = () => {
     const a = document.createElement('a');
     a.href = pdfUrl;
     a.download = fileName;
     a.click();
   };
+
+  if (showPreview) {
+    return (
+      <div className="page">
+        <header className="topbar">
+          <button className="btn-icon" onClick={() => setShowPreview(false)}>←</button>
+          <h1 className="topbar-title">{fileName}</h1>
+        </header>
+        <embed src={pdfUrl} type="application/pdf" className="pdf-iframe" />
+      </div>
+    );
+  }
 
   return (
     <div className="page">

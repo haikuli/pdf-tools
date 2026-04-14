@@ -3396,3 +3396,11 @@ html, body, #root {
 .app-tab-icon {
   font-size: 18px;
 }
+
+/* PDF iframe preview */
+.pdf-iframe {
+  flex: 1;
+  width: 100%;
+  border: none;
+  background: #fff;
+}
