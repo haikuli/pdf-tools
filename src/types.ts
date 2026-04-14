@@ -39,6 +39,7 @@ export interface SignatureItem {
 }
 
 export type Page =
+  | 'app-home'
   | 'home'
   // Image to PDF
   | 'picker' | 'picker-camera' | 'retake-camera' | 'editor' | 'reorder' | 'preview' | 'converting' | 'done'

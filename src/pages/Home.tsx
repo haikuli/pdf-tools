@@ -9,6 +9,7 @@ import {
 
 interface Props {
   onNavigate: (page: Page) => void;
+  onBack?: () => void;
 }
 
 type SortField = 'date' | 'name' | 'size';
@@ -66,7 +67,7 @@ const SORT_FIELDS: { key: SortField; label: string }[] = [
   { key: 'size', label: 'Size' },
 ];
 
-export default function Home({ onNavigate }: Props) {
+export default function Home({ onNavigate, onBack }: Props) {
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [tempSortField, setTempSortField] = useState<SortField>('date');
@@ -167,6 +168,7 @@ export default function Home({ onNavigate }: Props) {
           </>
         ) : (
           <>
+            {onBack && <button className="btn-icon" onClick={onBack}>←</button>}
             <h1 className="topbar-title">PDF Tools</h1>
             <button className="btn-icon" onClick={() => setShowSearch(true)}>
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

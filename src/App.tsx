@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import type { ImageItem, PageSize, PageOrientation, FillMode, Margin, Page } from './types';
+import AppHome from './pages/AppHome';
 import Home from './pages/Home';
 import ImagePicker, { ALL_MOCK_IMAGES } from './pages/ImagePicker';
 import ImageEditor from './pages/ImageEditor';
@@ -21,7 +22,7 @@ let idCounter = 0;
 const genId = () => `img-${++idCounter}-${Date.now()}`;
 
 export default function App() {
-  const [page, setPage] = useState<Page>('home');
+  const [page, setPage] = useState<Page>('app-home');
   const [images, setImages] = useState<ImageItem[]>([]);
   const [editorIndex, setEditorIndex] = useState(0);
   const [pageSize, setPageSize] = useState<PageSize>('A4');
@@ -157,7 +158,8 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      {page === 'home' && <Home onNavigate={setPage} />}
+      {page === 'app-home' && <AppHome onNavigate={setPage} />}
+      {page === 'home' && <Home onNavigate={setPage} onBack={() => setPage('app-home')} />}
 
       {page === 'picker' && (
         <ImagePicker images={ALL_MOCK_IMAGES} addImages={addImages} removeImage={removeImage} onConfirm={handlePickerConfirm} loading={loading} onBack={() => { if (addingFromEditor) { setAddingFromEditor(false); setPage('editor'); } else { setPage('home'); } }} onCamera={() => setPage('picker-camera')} autoCrop={autoCropEnabled} onAutoCropChange={setAutoCropEnabled} />
