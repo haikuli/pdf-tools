@@ -178,14 +178,14 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
               </div>
             </div>}
           </div>
-        </div>
-        <div className="idcard-guide-bottom">
-          <div className="idcard-mode-tabs" style={{gap:12,paddingBottom:16}}>
-            {([['id-card','ID Card'],['passport','Passport'],['single','Single Side']]as const).map(([k,l])=>(
-              <button key={k} className={`idcard-mode-tab ${mode===k?'active':''}`} onClick={()=>{setMode(k);setSide('front');setFrontUrl(null);setBackUrl(null);}}>{l}</button>
-            ))}
+          <div className="idcard-guide-overlay-bottom">
+            <div className="idcard-mode-tabs">
+              {([['id-card','ID Card'],['passport','Passport'],['single','Single Side']]as const).map(([k,l])=>(
+                <button key={k} className={`idcard-mode-tab ${mode===k?'active':''}`} onClick={()=>{setMode(k);setSide('front');setFrontUrl(null);setBackUrl(null);}}>{l}</button>
+              ))}
+            </div>
+            <button className="btn-primary" style={{width:'80%',padding:14,fontSize:16,borderRadius:24}} onClick={()=>{setModeConfirmed(true);setSide('front');setFrontUrl(null);setBackUrl(null);setStep('shoot');}}>Start Scan</button>
           </div>
-          <button className="btn-primary" style={{width:'80%',padding:14,fontSize:16,borderRadius:24}} onClick={()=>{setModeConfirmed(true);setSide('front');setFrontUrl(null);setBackUrl(null);setStep('shoot');}}>Start Scan</button>
         </div>
         {onSwitchToScan && (
           <div className="scan-mode-tabs">

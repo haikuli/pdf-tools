@@ -2385,6 +2385,18 @@ html, body, #root {
   padding: 12px 0 4px;
 }
 
+.idcard-guide-overlay-bottom {
+  position: absolute;
+  bottom: 16px;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  z-index: 10;
+}
+
 /* ===== ID Card Mode Tabs ===== */
 .idcard-mode-tabs {
   display: flex;
@@ -2958,9 +2970,9 @@ html, body, #root {
 /* ===== ID Card Overlay Card (Guide) ===== */
 .idcard-overlay-card {
   position: absolute;
-  top: 50%;
+  top: 45%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -55%);
   width: 75%;
   background: rgba(255,255,255,0.95);
   border-radius: 16px;
