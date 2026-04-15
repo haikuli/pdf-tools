@@ -154,8 +154,8 @@ export default function PdfMerge({ onBack }: Props) {
         <p className="pdf-name">{pdfName}.pdf</p>
         <p className="pdf-meta">Documents/</p>
         <div className="done-actions">
-          <button className="btn-primary btn-lg">Open</button>
-          <button className="btn-secondary btn-lg">Share</button>
+          <button className="btn-primary btn-lg">Share</button>
+          <button className="btn-secondary btn-lg">Open</button>
         </div>
       </div>
     </div>

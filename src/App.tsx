@@ -242,7 +242,7 @@ export default function App() {
 
       {/* Scan flow */}
       {page === 'scan-capture' && (
-        <ScanCapture onDone={handleScanCapture} onBack={() => setPage(scanImages.length > 0 ? 'scan-preview' : 'home')} />
+        <ScanCapture onDone={handleScanCapture} onBack={() => setPage(scanImages.length > 0 ? 'scan-preview' : 'home')} onSwitchToIdCard={() => setPage('idcard-notice')} />
       )}
       {page === 'scan-crop' && (
         <ImageEditor images={scanImages} currentIndex={scanIndex} setCurrentIndex={setScanIndex}
@@ -278,7 +278,7 @@ export default function App() {
 
       {/* ID Card Scan */}
       {page === 'idcard-notice' && (
-        <IdCardScan onComplete={() => setPage('home')} onBack={() => setPage('home')} />
+        <IdCardScan onComplete={() => setPage('home')} onBack={() => setPage('home')} onSwitchToScan={() => setPage('scan-capture')} />
       )}
 
       {/* PDF Viewer */}

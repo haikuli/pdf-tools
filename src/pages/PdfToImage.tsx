@@ -181,8 +181,9 @@ export default function PdfToImage({ onBack, mode }: Props) {
     return (
       <div className="page" style={{ background: '#000' }}>
         <header className="topbar" style={{ background: 'transparent', borderBottom: 'none' }}>
-          <button className="btn-icon" style={{ color: '#fff' }} onClick={() => setStep('done')}>←</button>
+          <button className="btn-icon" style={{ color: '#fff' }} onClick={onBack}>←</button>
           <h1 className="topbar-title" style={{ color: '#fff' }}>{folderName}_longimage.{ext}</h1>
+          <button className="btn-primary" style={{ fontSize: 12, padding: '6px 12px' }} onClick={() => { /* share */ }}>Share</button>
         </header>
         <div style={{ flex: 1, overflow: 'auto', display: 'flex', justifyContent: 'center', padding: 16 }}>
           <div style={{ width: '100%', maxWidth: 400 }}>
@@ -282,8 +283,8 @@ export default function PdfToImage({ onBack, mode }: Props) {
         </div>
 
         <div className="done-actions">
-          <button className="btn-primary btn-lg" onClick={() => setStep(mode === 'long' ? 'image-preview' : 'viewer')}>Open</button>
-          <button className="btn-secondary btn-lg">Share</button>
+          <button className="btn-primary btn-lg">Share</button>
+          <button className="btn-secondary btn-lg" onClick={() => setStep(mode === 'long' ? 'image-preview' : 'viewer')}>Open</button>
         </div>
       </div>
     </div>

@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import CropOverlay from '../components/CropOverlay';
 
-interface Props { onComplete: (f: string, b: string | null) => void; onBack: () => void; }
+interface Props { onComplete: (f: string, b: string | null) => void; onBack: () => void; onSwitchToScan?: () => void; }
 type Mode = 'id-card' | 'passport' | 'single';
 type Step = 'notice' | 'guide' | 'shoot' | 'preview' | 'adjust' | 'naming' | 'progress' | 'done';
 type Side = 'front' | 'back';
 
-export default function IdCardScan({ onComplete: _onComplete, onBack }: Props) {
-  const [step, setStep] = useState<Step>('notice');
+export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchToScan }: Props) {
+  const [step, setStep] = useState<Step>('guide');
+  const [showPrivacyNotice, setShowPrivacyNotice] = useState(true);
   const [mode, setMode] = useState<Mode>('id-card');
   const [modeConfirmed, setModeConfirmed] = useState(false);
   const [side, setSide] = useState<Side>('front');
@@ -141,11 +142,6 @@ export default function IdCardScan({ onComplete: _onComplete, onBack }: Props) {
   const rotate=()=>setRots(p=>{const n=[...p];n[adjustIdx]=(n[adjustIdx]+90)%360;return n;});
   const flt=filter==='bw'?'grayscale(1) contrast(2)':filter==='gray'?'grayscale(1)':filter==='magic'?'contrast(1.3) brightness(1.1) saturate(0.3)':'none';
 
-  if(step==='notice')return(
-    <div className="page center-page"><div className="dialog" style={{margin:24}}><h2>Privacy Notice</h2><p>Your ID card images are processed entirely on your device. No images are uploaded.</p><div className="dialog-actions"><button className="btn-secondary" onClick={goBack}>Cancel</button><button className="btn-primary" onClick={()=>setStep('guide')}>Got it</button></div></div></div>
-  );
-
-  // Guide: show example overlay on camera
   if(step==='guide')return(
     <div className="page">
       <header className="topbar"><button className="btn-icon" onClick={goBack}>←</button><h1 className="topbar-title">ID Card</h1><button className="btn-icon" onClick={toggleFlash}>{flashOn?'⚡':'🔦'}</button></header>
@@ -191,6 +187,12 @@ export default function IdCardScan({ onComplete: _onComplete, onBack }: Props) {
           </div>
           <button className="btn-primary" style={{width:'80%',padding:14,fontSize:16,borderRadius:24}} onClick={()=>{setModeConfirmed(true);setSide('front');setFrontUrl(null);setBackUrl(null);setStep('shoot');}}>Start Scan</button>
         </div>
+        {onSwitchToScan && (
+          <div className="scan-mode-tabs">
+            <span className="scan-mode-tab" onClick={() => { stopCam(); onSwitchToScan(); }}>Scan</span>
+            <span className="scan-mode-tab active">ID Card</span>
+          </div>
+        )}
         <div className="scan-capture-actions">
           <button className="scan-btn-secondary" disabled={!modeConfirmed} style={{opacity:modeConfirmed?1:0.4}} onClick={()=>galleryRef.current?.click()}>Album</button>
           <button className="scan-btn-capture" disabled={!modeConfirmed} style={{opacity:modeConfirmed?1:0.4}} onClick={()=>{setSide('front');setFrontUrl(null);setBackUrl(null);setStep('shoot');}}><span className="capture-ring"/></button>
@@ -198,6 +200,18 @@ export default function IdCardScan({ onComplete: _onComplete, onBack }: Props) {
         </div>
         <input ref={galleryRef} type="file" accept="image/*" hidden onChange={handleGallery}/>
       </div>
+      {showPrivacyNotice && (
+        <div className="dialog-overlay" style={{ zIndex: 150 }}>
+          <div className="dialog">
+            <h2>Privacy Notice</h2>
+            <p>Your ID card images are processed entirely on your device. No images are uploaded.</p>
+            <div className="dialog-actions">
+              <button className="btn-secondary" onClick={goBack}>Cancel</button>
+              <button className="btn-primary" onClick={() => setShowPrivacyNotice(false)}>Got it</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -213,6 +227,12 @@ export default function IdCardScan({ onComplete: _onComplete, onBack }: Props) {
             {!isP&&<div className="idcard-frame"><div className="viewfinder-corner vf-tl"/><div className="viewfinder-corner vf-tr"/><div className="viewfinder-corner vf-bl"/><div className="viewfinder-corner vf-br"/></div>}
             {isP&&<div className="passport-frame-overlay"><div className="passport-half"><span className="passport-label">Previous Page</span></div><div className="passport-divider"/><div className="passport-half"><span className="passport-label">Next Page</span></div></div>}
           </div>
+          {onSwitchToScan && (
+            <div className="scan-mode-tabs">
+              <span className="scan-mode-tab" onClick={() => { stopCam(); onSwitchToScan(); }}>Scan</span>
+              <span className="scan-mode-tab active">ID Card</span>
+            </div>
+          )}
           <div className="scan-capture-actions">
             <button className="scan-btn-secondary" onClick={()=>galleryRef.current?.click()}>Album</button>
             <button className="scan-btn-capture" onClick={capture} disabled={!camReady}><span className="capture-ring"/></button>
@@ -283,7 +303,7 @@ export default function IdCardScan({ onComplete: _onComplete, onBack }: Props) {
   if(step==='done')return(
     <div className="page"><header className="topbar"><button className="btn-icon" onClick={onBack}>←</button><h1 className="topbar-title">PDF Converted</h1></header>
       <div className="done-card" style={{flex:1,justifyContent:'center'}}><div className="done-check">✓</div><p className="done-success">Converted successfully!</p><p className="pdf-name">{pdfName}.pdf</p><p className="pdf-meta">Documents/MXPlayer/PDF/</p>
-        <div className="done-actions"><button className="btn-primary btn-lg" onClick={onBack}>Open</button><button className="btn-secondary btn-lg" onClick={onBack}>Share</button></div></div></div>
+        <div className="done-actions"><button className="btn-primary btn-lg" onClick={onBack}>Share</button><button className="btn-secondary btn-lg" onClick={onBack}>Open</button></div></div></div>
   );
 
   // Adjust - full edit with crop, rotate, retake
@@ -331,6 +351,9 @@ export default function IdCardScan({ onComplete: _onComplete, onBack }: Props) {
         </button>
         <button className={`bar-btn ${cropping ? 'bar-btn-active' : ''}`} onClick={() => setCropping(!cropping)} disabled={!canvasReady}>
           <span className="bar-icon">✂</span><span>Crop</span>
+        </button>
+        <button className="bar-btn" onClick={()=>setShowSheet('filter')} disabled={cropping}>
+          <span className="bar-icon">🎨</span><span>Filter</span>
         </button>
         <button className="bar-btn" onClick={()=>{setCropping(false);setSide(adjustIdx===0?'front':'back');setStep('shoot');}} disabled={cropping}>
           <span className="bar-icon">📷</span><span>Retake</span>

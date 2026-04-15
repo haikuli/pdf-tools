@@ -1,5 +1,6 @@
 import { useRef, useState, useMemo } from 'react';
 import type { ImageItem } from '../types';
+import { ImageToPdfIcon, ScanToPdfIcon, IdCardIcon, PdfToImageIcon } from '../components/ToolIcons';
 
 interface Props {
   images: ImageItem[];
@@ -64,6 +65,7 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
   const setAutoCrop = (v: boolean) => { setAutoCropLocal(v); onAutoCropChange?.(v); };
   const [showCropSheet, setShowCropSheet] = useState(false);
   const [rememberChoice, setRememberChoice] = useState(false);
+  const [showSettingsHelp, setShowSettingsHelp] = useState(false);
   const touchStartX = useRef<number>(0);
 
   const displayImages = useMemo(() => FOLDER_IMAGES[folder], [folder]);
@@ -284,7 +286,10 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
               <span style={{fontSize:12,color:'var(--text2)'}}>Remember my choice</span>
             </label>
             {rememberChoice && (
-              <p style={{fontSize:10,color:'var(--text2)',textAlign:'center',marginBottom:12,opacity:0.7}}>You can change this later in Settings → PDF Tools</p>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:4,marginBottom:12}}>
+                <p style={{fontSize:10,color:'var(--text2)',margin:0,opacity:0.7}}>Change anytime in Settings</p>
+                <button className="settings-help-btn" onClick={(e) => { e.stopPropagation(); setShowSettingsHelp(true); }}>?</button>
+              </div>
             )}
             <button className="btn-primary btn-confirm-full" onClick={() => { setShowCropSheet(false); onConfirm(new Set(selected)); }}>
               Continue
@@ -300,6 +305,38 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
             <p>You can select up to {MAX_IMAGES} images at a time.</p>
             <div className="dialog-actions">
               <button className="btn-primary" onClick={() => setShowLimitDialog(false)}>OK</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSettingsHelp && (
+        <div className="dialog-overlay" style={{ zIndex: 150 }} onClick={() => setShowSettingsHelp(false)}>
+          <div className="dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 300 }}>
+            <h2>Where to find Settings</h2>
+            <div style={{ margin: '12px 0', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
+                <span style={{ fontSize: 16, color: 'var(--text2)' }}>←</span>
+                <span style={{ flex: 1, fontWeight: 600, fontSize: 15 }}>PDF Tools</span>
+                <span style={{ fontSize: 14, color: 'var(--text2)' }}>🔍</span>
+                <span className="settings-help-highlight">⚙</span>
+              </div>
+              <div style={{ padding: '8px 10px', display: 'flex', justifyContent: 'space-around' }}>
+                {[
+                  { icon: <ImageToPdfIcon />, label: 'Image to PDF' },
+                  { icon: <ScanToPdfIcon />, label: 'Scan' },
+                  { icon: <IdCardIcon />, label: 'ID Card' },
+                  { icon: <PdfToImageIcon />, label: 'PDF to Image' },
+                ].map((t) => (
+                  <div key={t.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                    <div style={{ transform: 'scale(0.6)', transformOrigin: 'center' }}>{t.icon}</div>
+                    <span style={{ fontSize: 8, color: 'var(--text2)', textAlign: 'center', maxWidth: 48 }}>{t.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="dialog-actions">
+              <button className="btn-primary" onClick={() => setShowSettingsHelp(false)}>Got it</button>
             </div>
           </div>
         </div>

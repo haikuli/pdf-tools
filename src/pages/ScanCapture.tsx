@@ -3,11 +3,11 @@ import { detectDocument, cropPerspective, isOpenCVReady } from '../utils/documen
 import type { DetectedRect } from '../utils/documentDetector';
 
 interface CapturedImage { id: string; url: string; }
-interface Props { onDone: (images: CapturedImage[]) => void; onBack: () => void; }
+interface Props { onDone: (images: CapturedImage[]) => void; onBack: () => void; onSwitchToIdCard?: () => void; }
 
 let scanId = 0;
 
-export default function ScanCapture({ onDone, onBack }: Props) {
+export default function ScanCapture({ onDone, onBack, onSwitchToIdCard }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -159,6 +159,12 @@ export default function ScanCapture({ onDone, onBack }: Props) {
           <canvas ref={overlayRef} className="detection-overlay" />
           {showGrid && <div className="camera-grid"><div className="grid-h" style={{top:"33.3%"}} /><div className="grid-h" style={{top:"66.6%"}} /><div className="grid-v" style={{left:"33.3%"}} /><div className="grid-v" style={{left:"66.6%"}} /></div>}
         </div>
+        {onSwitchToIdCard && (
+          <div className="scan-mode-tabs">
+            <span className="scan-mode-tab active">Scan</span>
+            <span className="scan-mode-tab" onClick={() => { stopCamera(); onSwitchToIdCard(); }}>ID Card</span>
+          </div>
+        )}
         <div className="scan-bottom-row">
           <div className="scan-thumbs">
             {captured.length === 0 ? (
