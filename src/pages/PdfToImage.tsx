@@ -78,7 +78,6 @@ export default function PdfToImage({ onBack, mode }: Props) {
   const [format, setFormat] = useState<OutputFormat>('JPEG');
   const [pages, setPages] = useState(MOCK_PAGES);
   const [progress, setProgress] = useState(0);
-  const [viewerIndex, setViewerIndex] = useState(0);
 
   const title = mode === 'long' ? 'PDF to Long Image' : 'PDF to Image';
 
@@ -231,8 +230,8 @@ export default function PdfToImage({ onBack, mode }: Props) {
         </header>
         <p style={{ padding: '8px 16px 4px', fontSize: 11, color: 'var(--text2)' }}>{savePath}</p>
         <div className="file-list">
-          {selectedPages.map((p, idx) => (
-            <div key={p.id} className="file-item" onClick={() => setViewerIndex(idx)}>
+          {selectedPages.map((p) => (
+            <div key={p.id} className="file-item">
               <div style={{ width: 48, height: 62, flexShrink: 0, borderRadius: 4, overflow: 'hidden' }}>
                 <img src={`https://picsum.photos/seed/pdfpage${p.id + 9}/96/124`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
