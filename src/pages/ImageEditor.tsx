@@ -187,6 +187,7 @@ export default function ImageEditor({
           style={{
             filter: filterStyle,
             ...((showPageFrame && previewUrl) ? { position: 'absolute' as const, opacity: 0, pointerEvents: 'none' as const } : {}),
+            ...(!showPageFrame && marginPx > 0 ? { padding: marginPx, background: '#fff', boxShadow: '0 1px 6px rgba(0,0,0,0.15)' } : {}),
           }}
         />
 

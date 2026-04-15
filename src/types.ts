@@ -57,4 +57,6 @@ export type Page =
   // Merge
   | 'merge-select' | 'merge-order' | 'merge-progress' | 'merge-done'
   // Split
-  | 'split-select' | 'split-pages' | 'split-confirm' | 'split-progress' | 'split-done';
+  | 'split-select' | 'split-pages' | 'split-confirm' | 'split-progress' | 'split-done'
+  // Settings
+  | 'pdf-settings';

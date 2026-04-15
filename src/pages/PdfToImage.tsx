@@ -2,21 +2,85 @@ import { useState } from 'react';
 
 interface Props {
   onBack: () => void;
-  defaultMode?: 'individual' | 'long';
+  mode: 'individual' | 'long';
 }
 
-type Step = 'mode' | 'pages' | 'converting' | 'done';
-type OutputMode = 'individual' | 'long';
+type Step = 'select-pdf' | 'pages' | 'converting' | 'done' | 'viewer' | 'image-preview';
 type OutputFormat = 'JPEG' | 'PNG';
 
-const MOCK_PAGES = Array.from({ length: 6 }, (_, i) => ({ id: i + 1, selected: true }));
+interface PdfFile { id: string; name: string; size: string; thumbType: 'invoice' | 'contract' | 'presentation' | 'document' | 'resume'; }
 
-export default function PdfToImage({ onBack, defaultMode }: Props) {
-  const [step, setStep] = useState<Step>('mode');
-  const [mode, setMode] = useState<OutputMode>(defaultMode || 'individual');
+const MOCK_PDFS: PdfFile[] = [
+  { id: 'p1', name: 'Invoice_2026.pdf', size: '2.3 MB', thumbType: 'invoice' },
+  { id: 'p2', name: 'Contract_signed.pdf', size: '856 KB', thumbType: 'contract' },
+  { id: 'p3', name: 'Presentation.pdf', size: '5.1 MB', thumbType: 'presentation' },
+  { id: 'p4', name: 'Tax_Report_2025.pdf', size: '1.2 MB', thumbType: 'document' },
+  { id: 'p5', name: 'Meeting_Notes.pdf', size: '340 KB', thumbType: 'document' },
+  { id: 'p6', name: 'User_Manual.pdf', size: '8.7 MB', thumbType: 'document' },
+  { id: 'p7', name: 'Receipt_Amazon.pdf', size: '120 KB', thumbType: 'invoice' },
+  { id: 'p8', name: 'Project_Plan_Q1.pdf', size: '3.4 MB', thumbType: 'resume' },
+];
+
+function PdfThumb({ type }: { type: string }) {
+  if (type === 'invoice') return (
+    <div className="file-thumb">
+      <div className="ft-title" /><div className="ft-line" style={{width:'100%',height:1,background:'#ccc'}} />
+      <div className="ft-row"><div /><div /><div /></div>
+      <div className="ft-row"><div style={{background:'#f5f5f5'}} /><div style={{background:'#f5f5f5'}} /><div style={{background:'#f5f5f5'}} /></div>
+      <div className="ft-row"><div /><div /><div /></div>
+      <div className="ft-line" style={{width:'40%',marginTop:2}} />
+    </div>
+  );
+  if (type === 'contract') return (
+    <div className="file-thumb">
+      <div className="ft-title" style={{width:'50%'}} />
+      <div className="ft-line" style={{width:'95%'}} /><div className="ft-line" style={{width:'85%'}} />
+      <div className="ft-line" style={{width:'90%'}} /><div className="ft-line" style={{width:'75%'}} />
+      <div style={{marginTop:'auto',height:8,borderTop:'1px dashed #ccc',display:'flex',alignItems:'flex-end'}}>
+        <div style={{width:'40%',height:4,background:'#d0d0d0',borderRadius:2}} />
+      </div>
+    </div>
+  );
+  if (type === 'presentation') return (
+    <div className="file-thumb">
+      <div className="ft-block" style={{width:'100%',height:20,background:'#e8e0ff'}} />
+      <div className="ft-title" style={{width:'70%',marginTop:2}} />
+      <div className="ft-line" style={{width:'50%'}} />
+    </div>
+  );
+  if (type === 'resume') return (
+    <div className="file-thumb">
+      <div style={{width:14,height:14,borderRadius:7,background:'#e8e8e8',alignSelf:'center',marginBottom:2}} />
+      <div className="ft-title" style={{width:'70%',alignSelf:'center'}} />
+      <div className="ft-line" style={{width:'90%'}} /><div className="ft-line" style={{width:'80%'}} />
+      <div className="ft-line" style={{width:'85%'}} />
+    </div>
+  );
+  return (
+    <div className="file-thumb">
+      <div className="ft-title" />
+      <div className="ft-line" style={{width:'95%'}} /><div className="ft-line" style={{width:'80%'}} />
+      <div className="ft-line" style={{width:'90%'}} /><div className="ft-line" style={{width:'70%'}} />
+      <div className="ft-line" style={{width:'85%'}} /><div className="ft-line" style={{width:'60%'}} />
+    </div>
+  );
+}
+
+const MOCK_PAGES = Array.from({ length: 6 }, (_, i) => ({
+  id: i + 1,
+  selected: true,
+  thumb: `https://picsum.photos/seed/pdfpage${i + 10}/200/280`,
+}));
+
+export default function PdfToImage({ onBack, mode }: Props) {
+  const [step, setStep] = useState<Step>('select-pdf');
+  const [selectedPdf, setSelectedPdf] = useState<PdfFile | null>(null);
   const [format, setFormat] = useState<OutputFormat>('JPEG');
   const [pages, setPages] = useState(MOCK_PAGES);
   const [progress, setProgress] = useState(0);
+  const [viewerIndex, setViewerIndex] = useState(0);
+
+  const title = mode === 'long' ? 'PDF to Long Image' : 'PDF to Image';
 
   const togglePage = (id: number) => {
     setPages((prev) => prev.map((p) => p.id === id ? { ...p, selected: !p.selected } : p));
@@ -32,34 +96,24 @@ export default function PdfToImage({ onBack, defaultMode }: Props) {
     }, 200);
   };
 
-  if (step === 'mode') {
+  if (step === 'select-pdf') {
     return (
       <div className="page">
         <header className="topbar">
           <button className="btn-icon" onClick={onBack}>←</button>
-          <h1 className="topbar-title">PDF to Image</h1>
+          <h1 className="topbar-title">{title}</h1>
         </header>
-        <div className="mode-body">
-          <p className="mode-label">Output Mode</p>
-          <div className="mode-cards">
-            <button className={`mode-card ${mode === 'individual' ? 'active' : ''}`} onClick={() => setMode('individual')}>
-              <span className="mode-icon">🖼</span>
-              <span>Individual Images</span>
-            </button>
-            <button className={`mode-card ${mode === 'long' ? 'active' : ''}`} onClick={() => setMode('long')}>
-              <span className="mode-icon">📜</span>
-              <span>Long Image</span>
-            </button>
-          </div>
-          <p className="mode-label">Output Format</p>
-          <div className="toggle-group" style={{ padding: '0 16px' }}>
-            {(['JPEG', 'PNG'] as OutputFormat[]).map((f) => (
-              <button key={f} className={`toggle-btn ${format === f ? 'active' : ''}`} onClick={() => setFormat(f)}>{f}</button>
-            ))}
-          </div>
-        </div>
-        <div className="bottom-bar">
-          <button className="btn-primary btn-confirm-full" onClick={() => setStep('pages')}>Next</button>
+        <p style={{ padding: '12px 16px 4px', fontSize: 13, color: 'var(--text2)' }}>Select a PDF to convert</p>
+        <div className="file-list">
+          {MOCK_PDFS.map((f) => (
+            <div key={f.id} className="file-item" onClick={() => { setSelectedPdf(f); setStep('pages'); }}>
+              <PdfThumb type={f.thumbType} />
+              <div className="file-info">
+                <span className="file-name">{f.name}</span>
+                <span className="file-meta">{f.size}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -67,24 +121,36 @@ export default function PdfToImage({ onBack, defaultMode }: Props) {
 
   if (step === 'pages') {
     const selectedCount = pages.filter((p) => p.selected).length;
+    const allSelected = selectedCount === pages.length;
     return (
       <div className="page">
         <header className="topbar">
-          <button className="btn-icon" onClick={() => setStep('mode')}>←</button>
+          <button className="btn-icon" onClick={() => setStep('select-pdf')}>←</button>
           <h1 className="topbar-title">Select Pages</h1>
-          <button className="btn-primary" disabled={selectedCount === 0} onClick={startConvert}>
-            Convert ({selectedCount})
-          </button>
+          <label className="select-all" onClick={() => setPages((prev) => prev.map((p) => ({ ...p, selected: !allSelected })))}>
+            <span className={`checkbox ${allSelected ? 'checked' : ''}`}>{allSelected ? '✓' : ''}</span>
+            <span>All</span>
+          </label>
         </header>
         <div className="pages-grid">
-          {pages.map((p) => (
+          {pages.map((p, idx) => (
             <div key={p.id} className={`page-thumb ${p.selected ? 'selected' : ''}`} onClick={() => togglePage(p.id)}>
-              <div className="page-thumb-inner">
-                <span>Page {p.id}</span>
+              <div className="page-thumb-inner" style={{ overflow: 'hidden' }}>
+                <img src={`https://picsum.photos/seed/pdfpage${p.id + 9}/200/280`} alt={`Page ${p.id}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
-              {p.selected && <span className="thumb-check">✓</span>}
+              {p.selected && <span className="thumb-order">{pages.slice(0, idx).filter((x) => x.selected).length + 1}</span>}
             </div>
           ))}
+        </div>
+        <div className="bottom-bar" style={{ flexDirection: 'column', gap: 8 }}>
+          <div className="toggle-group" style={{ width: '100%' }}>
+            {(['JPEG', 'PNG'] as OutputFormat[]).map((f) => (
+              <button key={f} className={`toggle-btn ${format === f ? 'active' : ''}`} onClick={() => setFormat(f)}>{f}</button>
+            ))}
+          </div>
+          <button className="btn-primary btn-confirm-full" disabled={selectedCount === 0} onClick={startConvert}>
+            Convert ({selectedCount})
+          </button>
         </div>
       </div>
     );
@@ -107,7 +173,80 @@ export default function PdfToImage({ onBack, defaultMode }: Props) {
     );
   }
 
-  // Done
+  const selectedPages = pages.filter((p) => p.selected);
+  const folderName = selectedPdf?.name.replace('.pdf', '') || 'output';
+  const savePath = `Pictures/MXPlayer/${folderName}/`;
+  const ext = format.toLowerCase();
+
+  if (step === 'image-preview') {
+    return (
+      <div className="page" style={{ background: '#000' }}>
+        <header className="topbar" style={{ background: 'transparent', borderBottom: 'none' }}>
+          <button className="btn-icon" style={{ color: '#fff' }} onClick={() => setStep('done')}>←</button>
+          <h1 className="topbar-title" style={{ color: '#fff' }}>{folderName}_longimage.{ext}</h1>
+        </header>
+        <div style={{ flex: 1, overflow: 'auto', display: 'flex', justifyContent: 'center', padding: 16 }}>
+          <div style={{ width: '100%', maxWidth: 400 }}>
+            {selectedPages.map((p) => (
+              <img key={p.id} src={`https://picsum.photos/seed/pdfpage${p.id + 9}/400/520`} alt="" style={{ width: '100%', display: 'block' }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 'viewer') {
+    if (mode === 'long') {
+      return (
+        <div className="page">
+          <header className="topbar">
+            <button className="btn-icon" onClick={() => setStep('done')}>←</button>
+            <h1 className="topbar-title">{folderName}</h1>
+          </header>
+          <p style={{ padding: '8px 16px 4px', fontSize: 11, color: 'var(--text2)' }}>{savePath}</p>
+          <div className="file-list">
+            <div className="file-item">
+              <div style={{ width: 48, height: 62, flexShrink: 0, borderRadius: 4, overflow: 'hidden' }}>
+                <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  {selectedPages.slice(0, 3).map((p) => (
+                    <img key={p.id} src={`https://picsum.photos/seed/pdfpage${p.id + 9}/96/42`} alt="" style={{ width: '100%', flex: 1, objectFit: 'cover' }} />
+                  ))}
+                </div>
+              </div>
+              <div className="file-info">
+                <span className="file-name">{folderName}_longimage.{ext}</span>
+                <span className="file-meta">{selectedPages.length} pages stitched · {format}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="page">
+        <header className="topbar">
+          <button className="btn-icon" onClick={() => setStep('done')}>←</button>
+          <h1 className="topbar-title">{folderName}</h1>
+        </header>
+        <p style={{ padding: '8px 16px 4px', fontSize: 11, color: 'var(--text2)' }}>{savePath}</p>
+        <div className="file-list">
+          {selectedPages.map((p, idx) => (
+            <div key={p.id} className="file-item" onClick={() => setViewerIndex(idx)}>
+              <div style={{ width: 48, height: 62, flexShrink: 0, borderRadius: 4, overflow: 'hidden' }}>
+                <img src={`https://picsum.photos/seed/pdfpage${p.id + 9}/96/124`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+              <div className="file-info">
+                <span className="file-name">{folderName}_page{p.id}.{ext}</span>
+                <span className="file-meta">Page {p.id} · {format}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page">
       <header className="topbar">
@@ -116,11 +255,36 @@ export default function PdfToImage({ onBack, defaultMode }: Props) {
       </header>
       <div className="done-card" style={{ flex: 1, justifyContent: 'center' }}>
         <div className="done-check">✓</div>
-        <p className="done-success">Convert successfully!</p>
-        <p className="pdf-meta">{pages.filter((p) => p.selected).length} images exported as {format}</p>
+        <p className="done-success">Converted successfully!</p>
+        <p className="pdf-meta">
+          {mode === 'long' ? '1 long image' : `${selectedPages.length} image${selectedPages.length > 1 ? 's' : ''}`} · {format}
+        </p>
+        <p className="pdf-meta" style={{ fontSize: 11, opacity: 0.7 }}>Saved to {savePath}</p>
+
+        <div style={{ overflow: 'hidden', borderRadius: 6, margin: '12px auto', width: mode === 'long' ? 120 : 'auto', maxHeight: mode === 'long' ? 160 : 'none', boxShadow: '0 1px 4px rgba(0,0,0,0.15)' }}>
+          {mode === 'long' ? (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {selectedPages.map((p) => (
+                <img key={p.id} src={`https://picsum.photos/seed/pdfpage${p.id + 9}/200/260`} alt="" style={{ width: '100%', display: 'block' }} />
+              ))}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
+              {selectedPages.slice(0, 4).map((p) => (
+                <div key={p.id} style={{ width: 60, height: 80, borderRadius: 4, overflow: 'hidden' }}>
+                  <img src={`https://picsum.photos/seed/pdfpage${p.id + 9}/120/160`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+              ))}
+              {selectedPages.length > 4 && (
+                <span style={{ display: 'flex', alignItems: 'center', fontSize: 12, color: 'var(--text2)' }}>+{selectedPages.length - 4}</span>
+              )}
+            </div>
+          )}
+        </div>
+
         <div className="done-actions">
-          <button className="btn-primary btn-lg">Share</button>
-          <button className="btn-secondary btn-lg">Save to Album</button>
+          <button className="btn-primary btn-lg" onClick={() => setStep(mode === 'long' ? 'image-preview' : 'viewer')}>Open</button>
+          <button className="btn-secondary btn-lg">Share</button>
         </div>
       </div>
     </div>

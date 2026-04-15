@@ -16,6 +16,7 @@ import PdfToImage from './pages/PdfToImage';
 import PdfCompress from './pages/PdfCompress';
 import PdfMerge from './pages/PdfMerge';
 import PdfSplit from './pages/PdfSplit';
+import PdfSettings from './pages/PdfSettings';
 import './App.css';
 
 let idCounter = 0;
@@ -287,11 +288,11 @@ export default function App() {
 
       {/* PDF to Image */}
       {page === 'pdf2img-mode' && (
-        <PdfToImage onBack={() => setPage('home')} />
+        <PdfToImage onBack={() => setPage('home')} mode="individual" />
       )}
 
       {page === 'pdf2longimg' && (
-        <PdfToImage onBack={() => setPage('home')} defaultMode="long" />
+        <PdfToImage onBack={() => setPage('home')} mode="long" />
       )}
 
       {/* Compress */}
@@ -307,6 +308,10 @@ export default function App() {
       {/* Split */}
       {page === 'split-pages' && (
         <PdfSplit onBack={() => setPage('home')} />
+      )}
+
+      {page === 'pdf-settings' && (
+        <PdfSettings onBack={() => setPage('home')} />
       )}
     </div>
   );

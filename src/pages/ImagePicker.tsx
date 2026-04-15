@@ -279,10 +279,13 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
                 <span style={{fontSize:10,color:'var(--text2)'}}>Detect edges</span>
               </button>
             </div>
-            <label className="select-all" style={{marginBottom:16,justifyContent:'center'}} onClick={() => setRememberChoice(!rememberChoice)}>
+            <label className="select-all" style={{marginBottom:8,justifyContent:'center'}} onClick={() => setRememberChoice(!rememberChoice)}>
               <span className={`checkbox ${rememberChoice ? 'checked' : ''}`}>{rememberChoice ? '✓' : ''}</span>
               <span style={{fontSize:12,color:'var(--text2)'}}>Remember my choice</span>
             </label>
+            {rememberChoice && (
+              <p style={{fontSize:10,color:'var(--text2)',textAlign:'center',marginBottom:12,opacity:0.7}}>You can change this later in Settings → PDF Tools</p>
+            )}
             <button className="btn-primary btn-confirm-full" onClick={() => { setShowCropSheet(false); onConfirm(new Set(selected)); }}>
               Continue
             </button>
