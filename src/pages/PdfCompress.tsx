@@ -83,8 +83,9 @@ export default function PdfCompress({ onBack }: Props) {
   const [progress, setProgress] = useState(0);
 
   const currentLevel = LEVELS.find((l) => l.key === level)!;
-  const compressedSize = selectedPdf ? Math.round(selectedPdf.sizeBytes * currentLevel.ratio) : 0;
-  const reduction = selectedPdf ? Math.round((1 - currentLevel.ratio) * 100) : 0;
+  const _compressedSize = selectedPdf ? Math.round(selectedPdf.sizeBytes * currentLevel.ratio) : 0;
+  const _reduction = selectedPdf ? Math.round((1 - currentLevel.ratio) * 100) : 0;
+  void _compressedSize; void _reduction;
 
   // Simulate compression result based on file size and level
   const isSmallFile = selectedPdf ? selectedPdf.sizeBytes < 500000 : false;
