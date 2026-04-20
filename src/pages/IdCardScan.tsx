@@ -229,7 +229,7 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
             {!isP&&<div className="idcard-frame"><div className="viewfinder-corner vf-tl"/><div className="viewfinder-corner vf-tr"/><div className="viewfinder-corner vf-bl"/><div className="viewfinder-corner vf-br"/></div>}
             {isP&&<div className="passport-frame-overlay"><div className="passport-half"><span className="passport-label">Previous Page</span></div><div className="passport-divider"/><div className="passport-half"><span className="passport-label">Next Page</span></div></div>}
           </div>
-          {onSwitchToScan && (
+          {onSwitchToScan && !retaking && (
             <div className="scan-mode-tabs">
               <span className="scan-mode-tab" onClick={() => { stopCam(); onSwitchToScan(); }}>Scan</span>
               <span className="scan-mode-tab active">ID Card</span>
