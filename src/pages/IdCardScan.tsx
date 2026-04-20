@@ -342,10 +342,12 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
         <button className="btn-primary" onClick={()=>{setCropping(false);setStep('preview');}}>Done</button>
       </header>
       {images.length > 1 && (
-        <div className="page-indicator" style={{padding:'6px 16px'}}>
-          <button className="page-arrow" disabled={adjustIdx===0} onClick={()=>setAdjustIdx(0)}>‹</button>
-          <span className="page-label">{adjustIdx===0?'Front':'Back'}</span>
-          <button className="page-arrow" disabled={adjustIdx===1} onClick={()=>setAdjustIdx(1)}>›</button>
+        <div className="editor-nav-row">
+          <div className="editor-nav-center">
+            <button className="page-arrow" disabled={adjustIdx===0} onClick={()=>setAdjustIdx(0)}>‹</button>
+            <span className="editor-page-indicator">{adjustIdx + 1}/{images.length}</span>
+            <button className="page-arrow" disabled={adjustIdx>=images.length-1} onClick={()=>setAdjustIdx(1)}>›</button>
+          </div>
         </div>
       )}
       <div className="editor-canvas-wrap" ref={adjustWrapRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
