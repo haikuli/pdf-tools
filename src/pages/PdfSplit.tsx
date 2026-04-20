@@ -55,32 +55,15 @@ function PdfThumb({ type }: { type: string }) {
   );
 }
 
-// Parse range input like "1-5, 6-10, 12" into array of {from, to}
-function parseRanges(input: string, maxPage: number): { from: number; to: number }[] {
-  const results: { from: number; to: number }[] = [];
-  const parts = input.split(',').map(s => s.trim()).filter(Boolean);
-  for (const part of parts) {
-    if (part.includes('-')) {
-      const [a, b] = part.split('-').map(s => parseInt(s.trim()));
-      if (!isNaN(a) && !isNaN(b) && a >= 1 && b >= a && b <= maxPage) {
-        results.push({ from: a, to: b });
-      }
-    } else {
-      const n = parseInt(part);
-      if (!isNaN(n) && n >= 1 && n <= maxPage) {
-        results.push({ from: n, to: n });
-      }
-    }
-  }
-  return results;
-}
+interface RangeItem { id: number; from: string; to: string; }
+let rangeId = 0;
 
 export default function PdfSplit({ onBack }: Props) {
   const [step, setStep] = useState<Step>('select-pdf');
   const [selectedPdf, setSelectedPdf] = useState<PdfFile | null>(null);
   const [mode, setMode] = useState<SplitMode>('select');
   const [selectedPages, setSelectedPages] = useState<Set<number>>(new Set());
-  const [rangeInput, setRangeInput] = useState('');
+  const [rangeItems, setRangeItems] = useState<RangeItem[]>([{ id: ++rangeId, from: '1', to: '5' }]);
   const [progress, setProgress] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
 
@@ -96,11 +79,33 @@ export default function PdfSplit({ onBack }: Props) {
     else setSelectedPages(new Set(Array.from({ length: totalPages }, (_, i) => i + 1)));
   };
 
-  const ranges = parseRanges(rangeInput, totalPages);
+  const addRange = () => {
+    // Auto-suggest next range
+    const lastItem = rangeItems[rangeItems.length - 1];
+    const lastTo = parseInt(lastItem?.to) || 0;
+    const nextFrom = lastTo + 1;
+    const nextTo = Math.min(nextFrom + 4, totalPages);
+    setRangeItems(prev => [...prev, { id: ++rangeId, from: String(nextFrom), to: String(nextTo) }]);
+  };
+
+  const removeRange = (id: number) => {
+    setRangeItems(prev => prev.filter(r => r.id !== id));
+  };
+
+  const updateRange = (id: number, field: 'from' | 'to', value: string) => {
+    setRangeItems(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
+  };
+
+  // Validate ranges
+  const validRanges = rangeItems.filter(r => {
+    const from = parseInt(r.from);
+    const to = parseInt(r.to);
+    return !isNaN(from) && !isNaN(to) && from >= 1 && to >= from && to <= totalPages;
+  }).map(r => ({ from: parseInt(r.from), to: parseInt(r.to) }));
 
   const canSplit = () => {
     if (mode === 'select') return selectedPages.size > 0;
-    return ranges.length > 0;
+    return validRanges.length > 0;
   };
 
   const getResultFiles = (): string[] => {
@@ -111,10 +116,10 @@ export default function PdfSplit({ onBack }: Props) {
       if (pages.length <= 3) return [`${baseName}_p${pages.join('-')}.pdf`];
       return [`${baseName}_p${pages[0]}-${pages[pages.length - 1]}.pdf`];
     }
-    // Range mode: each range becomes a file
-    return ranges.map((r, i) => {
+    // Range mode: each valid range becomes a file
+    return validRanges.map((r, i) => {
       if (r.from === r.to) return `${baseName}_p${r.from}.pdf`;
-      return ranges.length === 1 ? `${baseName}_p${r.from}-${r.to}.pdf` : `${baseName}_part${i + 1}.pdf`;
+      return validRanges.length === 1 ? `${baseName}_p${r.from}-${r.to}.pdf` : `${baseName}_part${i + 1}.pdf`;
     });
   };
 
@@ -139,7 +144,7 @@ export default function PdfSplit({ onBack }: Props) {
         <p style={{ padding: '12px 16px 4px', fontSize: 13, color: 'var(--text2)' }}>Select a PDF</p>
         <div className="file-list">
           {MOCK_PDFS.map((f) => (
-            <div key={f.id} className="file-item" onClick={() => { setSelectedPdf(f); setSelectedPages(new Set()); setRangeInput(`1-${Math.min(f.pages, 5)}`); setStep('split'); }}>
+            <div key={f.id} className="file-item" onClick={() => { setSelectedPdf(f); setSelectedPages(new Set()); setRangeItems([{ id: ++rangeId, from: '1', to: String(Math.min(f.pages, 5)) }]); setStep('split'); }}>
               <PdfThumb type={f.thumbType} />
               <div className="file-info">
                 <span className="file-name">{f.name}</span>
@@ -189,26 +194,48 @@ export default function PdfSplit({ onBack }: Props) {
         )}
 
         {mode === 'range' && (
-          <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <p style={{ fontSize: 13, color: 'var(--text2)' }}>
-              Enter page ranges separated by commas. Each range creates a separate PDF.
-            </p>
-            <input
-              className="name-input"
-              style={{ marginBottom: 0 }}
-              placeholder="e.g. 1-5, 6-10, 11-12"
-              value={rangeInput}
-              onChange={(e) => setRangeInput(e.target.value)}
-            />
+          <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto', minHeight: 0 }}>
             <p style={{ fontSize: 12, color: 'var(--text2)' }}>
-              Total: {totalPages} pages
+              Each range creates a separate PDF. Total: {totalPages} pages
             </p>
-            {ranges.length > 0 && (
-              <div style={{ background: 'var(--surface2)', borderRadius: 8, padding: 12 }}>
-                <p style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 8 }}>Will create {ranges.length} file{ranges.length > 1 ? 's' : ''}:</p>
-                {resultFiles.map((f, i) => (
+            {rangeItems.map((item, idx) => (
+              <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 12, color: 'var(--text2)', minWidth: 20 }}>{idx + 1}.</span>
+                <input
+                  className="name-input"
+                  style={{ marginBottom: 0, flex: 1, padding: '8px 12px', fontSize: 14 }}
+                  type="number"
+                  min={1}
+                  max={totalPages}
+                  placeholder="From"
+                  value={item.from}
+                  onChange={(e) => updateRange(item.id, 'from', e.target.value)}
+                />
+                <span style={{ color: 'var(--text2)' }}>—</span>
+                <input
+                  className="name-input"
+                  style={{ marginBottom: 0, flex: 1, padding: '8px 12px', fontSize: 14 }}
+                  type="number"
+                  min={1}
+                  max={totalPages}
+                  placeholder="To"
+                  value={item.to}
+                  onChange={(e) => updateRange(item.id, 'to', e.target.value)}
+                />
+                {rangeItems.length > 1 && (
+                  <button className="btn-icon" style={{ fontSize: 16, padding: '4px' }} onClick={() => removeRange(item.id)}>✕</button>
+                )}
+              </div>
+            ))}
+            <button className="btn-secondary" style={{ alignSelf: 'flex-start', padding: '8px 16px', fontSize: 13 }} onClick={addRange}>
+              + Add Range
+            </button>
+            {validRanges.length > 0 && (
+              <div style={{ background: 'var(--surface2)', borderRadius: 8, padding: 12, marginTop: 4 }}>
+                <p style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 8 }}>Will create {validRanges.length} file{validRanges.length > 1 ? 's' : ''}:</p>
+                {getResultFiles().map((f, i) => (
                   <p key={i} style={{ fontSize: 13, color: 'var(--text)', marginBottom: 4 }}>
-                    📄 {f} <span style={{ color: 'var(--text2)', fontSize: 11 }}>({ranges[i].from === ranges[i].to ? `page ${ranges[i].from}` : `pages ${ranges[i].from}-${ranges[i].to}`})</span>
+                    📄 {f} <span style={{ color: 'var(--text2)', fontSize: 11 }}>({validRanges[i].from === validRanges[i].to ? `page ${validRanges[i].from}` : `pages ${validRanges[i].from}-${validRanges[i].to}`})</span>
                   </p>
                 ))}
               </div>
