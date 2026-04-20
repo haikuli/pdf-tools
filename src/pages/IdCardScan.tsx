@@ -31,6 +31,7 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
   const galleryRef = useRef<HTMLInputElement>(null);
   const [camReady, setCamReady] = useState(false);
   const [sideToast, setSideToast] = useState<string | null>(null);
+  const touchStartX = useRef(0);
 
   const startCam = useCallback(()=>{setCamReady(false);navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}}}).then(s=>{streamRef.current=s;if(videoRef.current)videoRef.current.srcObject=s;setCamReady(true);}).catch(()=>setCamReady(false));},[]);
   const stopCam = useCallback(()=>{if(streamRef.current){streamRef.current.getTracks().forEach(t=>t.stop());streamRef.current=null;}},[]);
@@ -324,7 +325,6 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
   };
 
   // Touch swipe handling for edit page
-  const touchStartX = useRef(0);
   const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (cropping) return;
