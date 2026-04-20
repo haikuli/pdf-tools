@@ -63,7 +63,7 @@ export default function PdfSplit({ onBack }: Props) {
   const [selectedPdf, setSelectedPdf] = useState<PdfFile | null>(null);
   const [mode, setMode] = useState<SplitMode>('select');
   const [selectedPages, setSelectedPages] = useState<Set<number>>(new Set());
-  const [rangeItems, setRangeItems] = useState<RangeItem[]>([{ id: ++rangeId, from: '1', to: '5' }]);
+  const [rangeItems, setRangeItems] = useState<RangeItem[]>([{ id: ++rangeId, from: '', to: '' }]);
   const [keepRemaining, setKeepRemaining] = useState(true);
   const [progress, setProgress] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
@@ -81,11 +81,10 @@ export default function PdfSplit({ onBack }: Props) {
   };
 
   const addRange = () => {
-    // Auto-suggest next range
     const lastItem = rangeItems[rangeItems.length - 1];
     const lastTo = parseInt(lastItem?.to) || 0;
-    const nextFrom = Math.min(lastTo + 1, totalPages);
-    const nextTo = Math.min(nextFrom + 4, totalPages);
+    const nextFrom = lastTo > 0 ? Math.min(lastTo + 1, totalPages) : '';
+    const nextTo = nextFrom ? Math.min(Number(nextFrom) + 4, totalPages) : '';
     setRangeItems(prev => [...prev, { id: ++rangeId, from: String(nextFrom), to: String(nextTo) }]);
   };
 
@@ -160,7 +159,7 @@ export default function PdfSplit({ onBack }: Props) {
         <p style={{ padding: '12px 16px 4px', fontSize: 13, color: 'var(--text2)' }}>Select a PDF</p>
         <div className="file-list">
           {MOCK_PDFS.map((f) => (
-            <div key={f.id} className="file-item" onClick={() => { setSelectedPdf(f); setSelectedPages(new Set()); setRangeItems([{ id: ++rangeId, from: '1', to: String(Math.min(f.pages, 5)) }]); setStep('split'); }}>
+            <div key={f.id} className="file-item" onClick={() => { setSelectedPdf(f); setSelectedPages(new Set()); setRangeItems([{ id: ++rangeId, from: '', to: '' }]); setStep('split'); }}>
               <PdfThumb type={f.thumbType} />
               <div className="file-info">
                 <span className="file-name">{f.name}</span>
@@ -210,56 +209,69 @@ export default function PdfSplit({ onBack }: Props) {
         )}
 
         {mode === 'range' && (
-          <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto', minHeight: 0 }}>
-            <p style={{ fontSize: 12, color: 'var(--text2)' }}>
-              Each range creates a separate PDF. Total: {totalPages} pages
-            </p>
-            {rangeItems.map((item, idx) => (
-              <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 12, color: 'var(--text2)', minWidth: 20 }}>{idx + 1}.</span>
-                <input
-                  className="name-input"
-                  style={{ marginBottom: 0, flex: 1, padding: '8px 12px', fontSize: 14 }}
-                  type="number"
-                  min={1}
-                  max={totalPages}
-                  placeholder="From"
-                  value={item.from}
-                  onChange={(e) => updateRange(item.id, 'from', e.target.value)}
-                />
-                <span style={{ color: 'var(--text2)' }}>—</span>
-                <input
-                  className="name-input"
-                  style={{ marginBottom: 0, flex: 1, padding: '8px 12px', fontSize: 14 }}
-                  type="number"
-                  min={1}
-                  max={totalPages}
-                  placeholder="To"
-                  value={item.to}
-                  onChange={(e) => updateRange(item.id, 'to', e.target.value)}
-                />
-                {rangeItems.length > 1 && (
-                  <button className="btn-icon" style={{ fontSize: 16, padding: '4px' }} onClick={() => removeRange(item.id)}>✕</button>
-                )}
-              </div>
-            ))}
-            <button className="btn-secondary" style={{ alignSelf: 'flex-start', padding: '8px 16px', fontSize: 13 }} onClick={addRange}>
-              + Add Range
-            </button>
-            <label className="toggle-switch-wrap" onClick={() => setKeepRemaining(!keepRemaining)}>
-              <div className={`toggle-switch ${keepRemaining ? 'on' : ''}`}><div className="toggle-knob" /></div>
-              <span style={{ fontSize: 13, color: 'var(--text)' }}>Keep remaining pages as a file</span>
-            </label>
-            {validRanges.length > 0 && (
-              <div style={{ background: 'var(--surface2)', borderRadius: 8, padding: 12, marginTop: 4 }}>
-                <p style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 8 }}>Will create {getResultFiles().length} file{getResultFiles().length > 1 ? 's' : ''}:</p>
-                {getResultFiles().map((f, i) => (
-                  <p key={i} style={{ fontSize: 13, color: 'var(--text)', marginBottom: 4 }}>
-                    📄 {f.name} <span style={{ color: 'var(--text2)', fontSize: 11 }}>({f.desc})</span>
-                  </p>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            {/* Page thumbnails for reference */}
+            <div style={{ padding: '8px 16px', flexShrink: 0, borderBottom: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                  <div key={p} style={{ minWidth: 48, width: 48, height: 64, borderRadius: 4, overflow: 'hidden', border: '1px solid var(--border)', position: 'relative', flexShrink: 0 }}>
+                    <img src={`https://picsum.photos/seed/split${selectedPdf?.id}p${p}/100/140`} alt={`${p}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <span style={{ position: 'absolute', bottom: 1, left: '50%', transform: 'translateX(-50%)', fontSize: 9, background: 'rgba(0,0,0,0.6)', color: '#fff', padding: '0 4px', borderRadius: 4 }}>{p}</span>
+                  </div>
                 ))}
               </div>
-            )}
+            </div>
+            <div style={{ padding: '12px 16px', flex: 1, display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto', minHeight: 0 }}>
+              <p style={{ fontSize: 12, color: 'var(--text2)' }}>
+                Each range creates a separate PDF. Total: {totalPages} pages
+              </p>
+              {rangeItems.map((item, idx) => (
+                <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 12, color: 'var(--text2)', minWidth: 20 }}>{idx + 1}.</span>
+                  <input
+                    className="name-input"
+                    style={{ marginBottom: 0, flex: 1, padding: '8px 12px', fontSize: 14 }}
+                    type="number"
+                    min={1}
+                    max={totalPages}
+                    placeholder="From"
+                    value={item.from}
+                    onChange={(e) => updateRange(item.id, 'from', e.target.value)}
+                  />
+                  <span style={{ color: 'var(--text2)' }}>—</span>
+                  <input
+                    className="name-input"
+                    style={{ marginBottom: 0, flex: 1, padding: '8px 12px', fontSize: 14 }}
+                    type="number"
+                    min={1}
+                    max={totalPages}
+                    placeholder="To"
+                    value={item.to}
+                    onChange={(e) => updateRange(item.id, 'to', e.target.value)}
+                  />
+                  {rangeItems.length > 1 && (
+                    <button className="btn-icon" style={{ fontSize: 16, padding: '4px' }} onClick={() => removeRange(item.id)}>✕</button>
+                  )}
+                </div>
+              ))}
+              <button className="btn-secondary" style={{ alignSelf: 'flex-start', padding: '8px 16px', fontSize: 13 }} onClick={addRange}>
+                + Add Range
+              </button>
+              <label className="toggle-switch-wrap" onClick={() => setKeepRemaining(!keepRemaining)}>
+                <div className={`toggle-switch ${keepRemaining ? 'on' : ''}`}><div className="toggle-knob" /></div>
+                <span style={{ fontSize: 13, color: 'var(--text)' }}>Keep remaining pages as a file</span>
+              </label>
+              {validRanges.length > 0 && (
+                <div style={{ background: 'var(--surface2)', borderRadius: 8, padding: 12, marginTop: 4 }}>
+                  <p style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 8 }}>Will create {getResultFiles().length} file{getResultFiles().length > 1 ? 's' : ''}:</p>
+                  {getResultFiles().map((f, i) => (
+                    <p key={i} style={{ fontSize: 13, color: 'var(--text)', marginBottom: 4 }}>
+                      📄 {f.name} <span style={{ color: 'var(--text2)', fontSize: 11 }}>({f.desc})</span>
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
