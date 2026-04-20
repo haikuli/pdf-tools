@@ -2181,6 +2181,85 @@ html, body, #root {
   min-height: 0;
   align-content: start;
 }
+
+/* ===== Split Pages ===== */
+.split-pages-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 16px;
+  min-height: 0;
+}
+.split-page-row {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+}
+.split-page-cell {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+.split-page-cell .page-thumb {
+  width: 100%;
+  margin: 0;
+}
+.split-inline-btn {
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  transition: all 0.2s;
+}
+.split-inline-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  box-shadow: 0 0 8px rgba(108,92,231,0.4);
+}
+.split-row-divider {
+  padding: 4px 0;
+}
+.split-divider-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 0;
+}
+.split-divider-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  transition: background 0.2s;
+}
+.split-divider-icon {
+  font-size: 14px;
+  color: var(--text2);
+  transition: color 0.2s;
+}
+.split-divider-btn.active .split-divider-line {
+  height: 2px;
+  background: var(--primary);
+}
+.split-divider-btn.active .split-divider-icon {
+  color: var(--primary);
+}
 .page-thumb {
   width: calc(33.33% - 8px);
   aspect-ratio: 3/4;
