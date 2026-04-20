@@ -4,7 +4,7 @@ interface Props {
   onBack: () => void;
 }
 
-type Step = 'select-pdf' | 'split' | 'progress' | 'done';
+type Step = 'select-pdf' | 'select-pages' | 'progress' | 'done';
 
 interface PdfFile { id: string; name: string; size: string; pages: number; thumbType: string; }
 
@@ -57,33 +57,21 @@ function PdfThumb({ type }: { type: string }) {
 export default function PdfSplit({ onBack }: Props) {
   const [step, setStep] = useState<Step>('select-pdf');
   const [selectedPdf, setSelectedPdf] = useState<PdfFile | null>(null);
-  const [splits, setSplits] = useState<Set<number>>(new Set()); // split AFTER page N
+  const [selectedPages, setSelectedPages] = useState<Set<number>>(new Set());
   const [progress, setProgress] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
 
   const totalPages = selectedPdf?.pages || 0;
 
-  const toggleSplit = (afterPage: number) => {
-    setSplits(prev => {
-      const n = new Set(prev);
-      n.has(afterPage) ? n.delete(afterPage) : n.add(afterPage);
-      return n;
-    });
+  const togglePage = (p: number) => {
+    setSelectedPages(prev => { const n = new Set(prev); n.has(p) ? n.delete(p) : n.add(p); return n; });
   };
 
-  const getResultFiles = (): { name: string; range: string }[] => {
-    if (!selectedPdf || splits.size === 0) return [];
-    const baseName = selectedPdf.name.replace('.pdf', '');
-    const sortedSplits = Array.from(splits).sort((a, b) => a - b);
-    const files: { name: string; range: string }[] = [];
-    let start = 1;
-    for (const s of sortedSplits) {
-      files.push({ name: `${baseName}_part${files.length + 1}.pdf`, range: `${start}-${s}` });
-      start = s + 1;
-    }
-    // Last segment
-    files.push({ name: `${baseName}_part${files.length + 1}.pdf`, range: `${start}-${totalPages}` });
-    return files;
+  const allSelected = selectedPages.size === totalPages;
+
+  const toggleAll = () => {
+    if (allSelected) setSelectedPages(new Set());
+    else setSelectedPages(new Set(Array.from({ length: totalPages }, (_, i) => i + 1)));
   };
 
   const startSplit = () => {
@@ -96,18 +84,26 @@ export default function PdfSplit({ onBack }: Props) {
     }, 200);
   };
 
+  const getFileName = () => {
+    if (!selectedPdf) return '';
+    const baseName = selectedPdf.name.replace('.pdf', '');
+    const pages = Array.from(selectedPages).sort((a, b) => a - b);
+    if (pages.length <= 3) return `${baseName}_p${pages.join('-')}.pdf`;
+    return `${baseName}_p${pages[0]}-${pages[pages.length - 1]}.pdf`;
+  };
+
   // Select PDF
   if (step === 'select-pdf') {
     return (
       <div className="page">
         <header className="topbar">
           <button className="btn-icon" onClick={onBack}>←</button>
-          <h1 className="topbar-title">Split PDF</h1>
+          <h1 className="topbar-title">Extract Pages</h1>
         </header>
-        <p style={{ padding: '12px 16px 4px', fontSize: 13, color: 'var(--text2)' }}>Select a PDF to split</p>
+        <p style={{ padding: '12px 16px 4px', fontSize: 13, color: 'var(--text2)' }}>Select a PDF</p>
         <div className="file-list">
           {MOCK_PDFS.map((f) => (
-            <div key={f.id} className="file-item" onClick={() => { setSelectedPdf(f); setSplits(new Set()); setStep('split'); }}>
+            <div key={f.id} className="file-item" onClick={() => { setSelectedPdf(f); setSelectedPages(new Set()); setStep('select-pages'); }}>
               <PdfThumb type={f.thumbType} />
               <div className="file-info">
                 <span className="file-name">{f.name}</span>
@@ -120,80 +116,34 @@ export default function PdfSplit({ onBack }: Props) {
     );
   }
 
-  // Split page with visual dividers
-  if (step === 'split') {
-    const resultFiles = getResultFiles();
-    const fileCount = resultFiles.length || 1;
-    // Build rows of 3 pages, with split lines between rows
-    const rows: number[][] = [];
-    for (let i = 0; i < totalPages; i += 3) {
-      rows.push(Array.from({ length: Math.min(3, totalPages - i) }, (_, j) => i + j + 1));
-    }
-
+  // Select pages
+  if (step === 'select-pages') {
     return (
       <div className="page">
         <header className="topbar">
           <button className="btn-icon" onClick={() => setStep('select-pdf')}>←</button>
-          <h1 className="topbar-title">Split PDF</h1>
-          <button className="btn-primary" disabled={splits.size === 0} onClick={startSplit}>
-            Split ({fileCount})
-          </button>
+          <h1 className="topbar-title">Select Pages</h1>
+          <label className="select-all" onClick={toggleAll}>
+            <span className={`checkbox ${allSelected ? 'checked' : ''}`}>{allSelected ? '✓' : ''}</span>
+            <span>All</span>
+          </label>
         </header>
-        <p style={{ padding: '8px 16px 4px', fontSize: 12, color: 'var(--text2)' }}>
-          Tap ✂ between pages to add split points
-        </p>
-        <div className="split-pages-container">
-          {rows.map((row, rowIdx) => (
-            <div key={rowIdx}>
-              {/* Page row */}
-              <div className="split-page-row">
-                {row.map((pageNum) => (
-                  <div key={pageNum} className="split-page-cell">
-                    <div className="page-thumb" style={{ width: '100%', margin: 0 }}>
-                      <div className="page-thumb-inner" style={{ overflow: 'hidden' }}>
-                        <img
-                          src={`https://picsum.photos/seed/split${selectedPdf?.id}p${pageNum}/200/280`}
-                          alt={`Page ${pageNum}`}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                      </div>
-                      <span className="page-thumb-num">{pageNum}</span>
-                    </div>
-                    {/* Inline split button between pages in same row */}
-                    {pageNum < totalPages && pageNum !== row[row.length - 1] && (
-                      <button
-                        className={`split-inline-btn ${splits.has(pageNum) ? 'active' : ''}`}
-                        onClick={() => toggleSplit(pageNum)}
-                      >
-                        ✂
-                      </button>
-                    )}
-                  </div>
-                ))}
+        <div className="pages-grid">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <div key={p} className={`page-thumb ${selectedPages.has(p) ? 'selected' : ''}`} onClick={() => togglePage(p)}>
+              <div className="page-thumb-inner" style={{ overflow: 'hidden' }}>
+                <img src={`https://picsum.photos/seed/split${selectedPdf?.id}p${p}/200/280`} alt={`Page ${p}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
-              {/* Split line between rows */}
-              {rowIdx < rows.length - 1 && (
-                <div className="split-row-divider">
-                  <button
-                    className={`split-divider-btn ${splits.has(row[row.length - 1]) ? 'active' : ''}`}
-                    onClick={() => toggleSplit(row[row.length - 1])}
-                  >
-                    <span className="split-divider-line" />
-                    <span className="split-divider-icon">✂</span>
-                    <span className="split-divider-line" />
-                  </button>
-                </div>
-              )}
+              {selectedPages.has(p) && <span className="thumb-order">{Array.from(selectedPages).sort((a,b)=>a-b).indexOf(p) + 1}</span>}
+              <span className="page-thumb-num">{p}</span>
             </div>
           ))}
         </div>
-        {splits.size > 0 && (
-          <div style={{ padding: '8px 16px', fontSize: 12, color: 'var(--text2)', flexShrink: 0, borderTop: '1px solid var(--border)' }}>
-            {resultFiles.map((f, i) => (
-              <span key={i} style={{ marginRight: 12 }}>Part {i + 1}: p.{f.range}</span>
-            ))}
-          </div>
-        )}
+        <div className="bottom-bar" style={{ flexDirection: 'column', gap: 8 }}>
+          <button className="btn-primary btn-confirm-full" disabled={selectedPages.size === 0} onClick={startSplit}>
+            Extract ({selectedPages.size} page{selectedPages.size > 1 ? 's' : ''})
+          </button>
+        </div>
       </div>
     );
   }
@@ -210,29 +160,25 @@ export default function PdfSplit({ onBack }: Props) {
             </svg>
             <span className="progress-text">{progress >= 100 ? '✓' : `${progress}%`}</span>
           </div>
-          <p className="progress-label">{progress >= 100 ? 'Done!' : 'Splitting...'}</p>
+          <p className="progress-label">{progress >= 100 ? 'Done!' : 'Extracting...'}</p>
         </div>
       </div>
     );
   }
 
   // Done
-  const resultFiles = getResultFiles();
+  const fileName = getFileName();
   return (
     <div className="page">
       <header className="topbar">
         <button className="btn-icon" onClick={onBack}>←</button>
-        <h1 className="topbar-title">Split Complete</h1>
+        <h1 className="topbar-title">Extract Complete</h1>
       </header>
       <div className="done-card" style={{ flex: 1, justifyContent: 'center' }}>
         <div className="done-check">✓</div>
-        <p className="done-success">Split successfully!</p>
+        <p className="done-success">Extracted successfully!</p>
+        <p className="pdf-name">{fileName}</p>
         <p className="pdf-meta">Pictures/MXPlayer/PDF/</p>
-        <div style={{ width: '100%', padding: '8px 16px', maxHeight: 160, overflowY: 'auto' }}>
-          {resultFiles.map((f, i) => (
-            <p key={i} className="pdf-name" style={{ fontSize: 13, marginBottom: 4 }}>{f.name}</p>
-          ))}
-        </div>
         <div className="done-actions">
           <button className="btn-primary btn-lg" onClick={onBack}>Share</button>
           <button className="btn-secondary btn-lg" onClick={() => setShowPreview(true)}>Open</button>
@@ -241,17 +187,9 @@ export default function PdfSplit({ onBack }: Props) {
       {showPreview && (
         <div className="dialog-overlay" style={{ zIndex: 150 }}>
           <div className="dialog" style={{ maxWidth: 380 }}>
-            <h2>Files</h2>
-            <div style={{ maxHeight: 200, overflowY: 'auto', margin: '12px 0' }}>
-              {resultFiles.map((f, i) => (
-                <div key={i} className="file-item" style={{ padding: '8px 0' }}>
-                  <span style={{ fontSize: 20, marginRight: 8 }}>📄</span>
-                  <span style={{ fontSize: 13 }}>{f.name}</span>
-                  <span style={{ fontSize: 11, color: 'var(--text2)', marginLeft: 'auto' }}>p.{f.range}</span>
-                </div>
-              ))}
-            </div>
-            <div className="dialog-actions">
+            <h2>{fileName}</h2>
+            <p style={{ fontSize: 13, color: 'var(--text2)' }}>{selectedPages.size} pages extracted</p>
+            <div className="dialog-actions" style={{ marginTop: 16 }}>
               <button className="btn-primary" onClick={() => { setShowPreview(false); onBack(); }}>Done</button>
             </div>
           </div>
