@@ -254,18 +254,9 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
         {backUrl&&<img src={backUrl} alt="B" style={{transform:`rotate(${rots[1]}deg)`,filter:flt}}/>}
       </div></div>
       <div className="bottom-bar editor-bar">
-        <button className="bar-btn" onClick={()=>setShowSheet('retake')}><span className="bar-icon">📷</span><span>Retake</span></button>
-        <button className="bar-btn" onClick={()=>setShowSheet('crop')}><span className="bar-icon">✂</span><span>Crop</span></button>
+        <button className="bar-btn" onClick={()=>{setAdjustIdx(0);setStep('adjust');}}><span className="bar-icon">✏️</span><span>Edit</span></button>
         <button className="bar-btn" onClick={()=>setShowSheet('filter')}><span className="bar-icon">🎨</span><span>Filter</span></button>
       </div>
-      {showSheet==='retake'&&<><div className="sheet-backdrop" onClick={()=>setShowSheet(null)}/><div className="bottom-sheet"><h2>{mode==='single'?'Retake photo?':'Retake which side?'}</h2><div className="retake-options">
-        {frontUrl&&<button className="retake-option-with-thumb" onClick={()=>{setShowSheet(null);setSide('front');setStep('shoot');}}><img src={frontUrl} className="retake-thumb"/><span>{mode==='single'?'Retake':'Front Side'}</span></button>}
-        {backUrl&&mode!=='single'&&<button className="retake-option-with-thumb" onClick={()=>{setShowSheet(null);setSide('back');setStep('shoot');}}><img src={backUrl} className="retake-thumb"/><span>Back Side</span></button>}
-      </div><button className="btn-text" style={{width:'100%',textAlign:'center'}} onClick={()=>setShowSheet(null)}>Cancel</button></div></>}
-      {showSheet==='crop'&&<><div className="sheet-backdrop" onClick={()=>setShowSheet(null)}/><div className="bottom-sheet"><h2>{mode==='single'?'Crop photo?':'Crop which side?'}</h2><div className="retake-options">
-        {frontUrl&&<button className="retake-option-with-thumb" onClick={()=>{setShowSheet(null);setAdjustIdx(0);setStep('adjust');}}><img src={frontUrl} className="retake-thumb"/><span>{mode==='single'?'Crop':'Front Side'}</span></button>}
-        {backUrl&&mode!=='single'&&<button className="retake-option-with-thumb" onClick={()=>{setShowSheet(null);setAdjustIdx(1);setStep('adjust');}}><img src={backUrl} className="retake-thumb"/><span>Back Side</span></button>}
-      </div><button className="btn-text" style={{width:'100%',textAlign:'center'}} onClick={()=>setShowSheet(null)}>Cancel</button></div></>}
       {showSheet==='filter'&&<><div className="sheet-backdrop" onClick={()=>setShowSheet(null)}/><div className="bottom-sheet"><h2>Choose Filter</h2><div className="filter-sheet-options">
         {([['original','Original'],['magic','Magic'],['gray','Grayscale'],['bw','B&W']]as const).map(([k,l])=>(
           <button key={k} className={`filter-sheet-option ${filter===k?'active':''}`} onClick={()=>{setFilter(k);setShowSheet(null);}}>
@@ -306,7 +297,13 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
         <div className="done-actions"><button className="btn-primary btn-lg" onClick={onBack}>Share</button><button className="btn-secondary btn-lg" onClick={onBack}>Open</button></div></div></div>
   );
 
-  // Adjust - full edit with crop, rotate, retake
+  // Adjust - edit with swipe between front/back, rotate, crop, retake
+
+  const images = [frontUrl, backUrl].filter(Boolean) as string[];
+  const handleSwipe = (dir: 'left' | 'right') => {
+    if (dir === 'left' && adjustIdx === 0 && images.length > 1) setAdjustIdx(1);
+    if (dir === 'right' && adjustIdx === 1) setAdjustIdx(0);
+  };
 
   const handleAdjustCrop = (cropRect: { x: number; y: number; w: number; h: number }) => {
     if (!adjustCanvasRef.current) return;
@@ -326,6 +323,16 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
     }, 'image/png');
   };
 
+  // Touch swipe handling for edit page
+  const touchStartX = useRef(0);
+  const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (cropping) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (dx < -50) handleSwipe('left');
+    else if (dx > 50) handleSwipe('right');
+  };
+
   return(
     <div className="page">
       <header className="topbar">
@@ -333,7 +340,14 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
         <h1 className="topbar-title">Edit</h1>
         <button className="btn-primary" onClick={()=>{setCropping(false);setStep('preview');}}>Done</button>
       </header>
-      <div className="editor-canvas-wrap" ref={adjustWrapRef}>
+      {images.length > 1 && (
+        <div className="page-indicator" style={{padding:'6px 16px'}}>
+          <button className="page-arrow" disabled={adjustIdx===0} onClick={()=>setAdjustIdx(0)}>‹</button>
+          <span className="page-label">{adjustIdx===0?'Front':'Back'}</span>
+          <button className="page-arrow" disabled={adjustIdx===1} onClick={()=>setAdjustIdx(1)}>›</button>
+        </div>
+      )}
+      <div className="editor-canvas-wrap" ref={adjustWrapRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
         <div className="editor-image-container">
           <canvas ref={adjustCanvasRef} className="editor-canvas" />
         </div>
@@ -351,9 +365,6 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
         </button>
         <button className={`bar-btn ${cropping ? 'bar-btn-active' : ''}`} onClick={() => setCropping(!cropping)} disabled={!canvasReady}>
           <span className="bar-icon">✂</span><span>Crop</span>
-        </button>
-        <button className="bar-btn" onClick={()=>setShowSheet('filter')} disabled={cropping}>
-          <span className="bar-icon">🎨</span><span>Filter</span>
         </button>
         <button className="bar-btn" onClick={()=>{setCropping(false);setSide(adjustIdx===0?'front':'back');setStep('shoot');}} disabled={cropping}>
           <span className="bar-icon">📷</span><span>Retake</span>
