@@ -64,6 +64,7 @@ export default function PdfSplit({ onBack }: Props) {
   const [mode, setMode] = useState<SplitMode>('select');
   const [selectedPages, setSelectedPages] = useState<Set<number>>(new Set());
   const [rangeItems, setRangeItems] = useState<RangeItem[]>([{ id: ++rangeId, from: '1', to: '5' }]);
+  const [keepRemaining, setKeepRemaining] = useState(true);
   const [progress, setProgress] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
 
@@ -108,19 +109,34 @@ export default function PdfSplit({ onBack }: Props) {
     return validRanges.length > 0;
   };
 
-  const getResultFiles = (): string[] => {
+  const getResultFiles = (): { name: string; desc: string }[] => {
     if (!selectedPdf) return [];
     const baseName = selectedPdf.name.replace('.pdf', '');
     if (mode === 'select') {
       const pages = Array.from(selectedPages).sort((a, b) => a - b);
-      if (pages.length <= 3) return [`${baseName}_p${pages.join('-')}.pdf`];
-      return [`${baseName}_p${pages[0]}-${pages[pages.length - 1]}.pdf`];
+      if (pages.length <= 3) return [{ name: `${baseName}_p${pages.join('-')}.pdf`, desc: `pages ${pages.join(', ')}` }];
+      return [{ name: `${baseName}_p${pages[0]}-${pages[pages.length - 1]}.pdf`, desc: `${pages.length} pages` }];
     }
     // Range mode: each valid range becomes a file
-    return validRanges.map((r, i) => {
-      if (r.from === r.to) return `${baseName}_p${r.from}.pdf`;
-      return validRanges.length === 1 ? `${baseName}_p${r.from}-${r.to}.pdf` : `${baseName}_part${i + 1}.pdf`;
+    const files: { name: string; desc: string }[] = validRanges.map((r, i) => {
+      const name = r.from === r.to
+        ? `${baseName}_p${r.from}.pdf`
+        : (validRanges.length === 1 && !keepRemaining ? `${baseName}_p${r.from}-${r.to}.pdf` : `${baseName}_part${i + 1}.pdf`);
+      const desc = r.from === r.to ? `page ${r.from}` : `pages ${r.from}-${r.to}`;
+      return { name, desc };
     });
+    // Add remaining pages file
+    if (keepRemaining && validRanges.length > 0) {
+      const coveredPages = new Set<number>();
+      for (const r of validRanges) {
+        for (let i = r.from; i <= r.to; i++) coveredPages.add(i);
+      }
+      const remaining = Array.from({ length: totalPages }, (_, i) => i + 1).filter(p => !coveredPages.has(p));
+      if (remaining.length > 0) {
+        files.push({ name: `${baseName}_remaining.pdf`, desc: `${remaining.length} remaining pages` });
+      }
+    }
+    return files;
   };
 
   const startSplit = () => {
@@ -230,12 +246,16 @@ export default function PdfSplit({ onBack }: Props) {
             <button className="btn-secondary" style={{ alignSelf: 'flex-start', padding: '8px 16px', fontSize: 13 }} onClick={addRange}>
               + Add Range
             </button>
+            <label className="toggle-switch-wrap" onClick={() => setKeepRemaining(!keepRemaining)}>
+              <div className={`toggle-switch ${keepRemaining ? 'on' : ''}`}><div className="toggle-knob" /></div>
+              <span style={{ fontSize: 13, color: 'var(--text)' }}>Keep remaining pages as a file</span>
+            </label>
             {validRanges.length > 0 && (
               <div style={{ background: 'var(--surface2)', borderRadius: 8, padding: 12, marginTop: 4 }}>
-                <p style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 8 }}>Will create {validRanges.length} file{validRanges.length > 1 ? 's' : ''}:</p>
+                <p style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 8 }}>Will create {getResultFiles().length} file{getResultFiles().length > 1 ? 's' : ''}:</p>
                 {getResultFiles().map((f, i) => (
                   <p key={i} style={{ fontSize: 13, color: 'var(--text)', marginBottom: 4 }}>
-                    📄 {f} <span style={{ color: 'var(--text2)', fontSize: 11 }}>({validRanges[i].from === validRanges[i].to ? `page ${validRanges[i].from}` : `pages ${validRanges[i].from}-${validRanges[i].to}`})</span>
+                    📄 {f.name} <span style={{ color: 'var(--text2)', fontSize: 11 }}>({f.desc})</span>
                   </p>
                 ))}
               </div>
@@ -286,7 +306,7 @@ export default function PdfSplit({ onBack }: Props) {
         <p className="done-success">{resultFiles.length > 1 ? 'Split' : 'Extracted'} successfully!</p>
         <div style={{ width: '100%', padding: '8px 16px', maxHeight: 120, overflowY: 'auto' }}>
           {resultFiles.map((f, i) => (
-            <p key={i} className="pdf-name" style={{ fontSize: 13, marginBottom: 4 }}>{f}</p>
+            <p key={i} className="pdf-name" style={{ fontSize: 13, marginBottom: 4 }}>{f.name}</p>
           ))}
         </div>
         <p className="pdf-meta">Pictures/MXPlayer/PDF/</p>
@@ -303,7 +323,7 @@ export default function PdfSplit({ onBack }: Props) {
               {resultFiles.map((f, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', padding: '8px 0', gap: 8 }}>
                   <span style={{ fontSize: 20 }}>📄</span>
-                  <span style={{ fontSize: 13 }}>{f}</span>
+                  <span style={{ fontSize: 13 }}>{f.name}</span>
                 </div>
               ))}
             </div>
