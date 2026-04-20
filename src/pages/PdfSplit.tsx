@@ -84,7 +84,7 @@ export default function PdfSplit({ onBack }: Props) {
     // Auto-suggest next range
     const lastItem = rangeItems[rangeItems.length - 1];
     const lastTo = parseInt(lastItem?.to) || 0;
-    const nextFrom = lastTo + 1;
+    const nextFrom = Math.min(lastTo + 1, totalPages);
     const nextTo = Math.min(nextFrom + 4, totalPages);
     setRangeItems(prev => [...prev, { id: ++rangeId, from: String(nextFrom), to: String(nextTo) }]);
   };
