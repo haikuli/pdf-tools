@@ -58,7 +58,6 @@ export default function PdfSplit({ onBack }: Props) {
   const [step, setStep] = useState<Step>('select-pdf');
   const [selectedPdf, setSelectedPdf] = useState<PdfFile | null>(null);
   const [selectedPages, setSelectedPages] = useState<Set<number>>(new Set());
-  const [rangeInput, setRangeInput] = useState('');
   const [progress, setProgress] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
 
@@ -72,25 +71,6 @@ export default function PdfSplit({ onBack }: Props) {
   const toggleAll = () => {
     if (allSelected) setSelectedPages(new Set());
     else setSelectedPages(new Set(Array.from({ length: totalPages }, (_, i) => i + 1)));
-  };
-
-  // Apply range input like "5-20" or "1,3,5-8"
-  const applyRange = () => {
-    const parts = rangeInput.split(',').map(s => s.trim()).filter(Boolean);
-    const newSet = new Set(selectedPages);
-    for (const part of parts) {
-      if (part.includes('-')) {
-        const [a, b] = part.split('-').map(s => parseInt(s.trim()));
-        if (!isNaN(a) && !isNaN(b) && a >= 1 && b >= a && b <= totalPages) {
-          for (let i = a; i <= b; i++) newSet.add(i);
-        }
-      } else {
-        const n = parseInt(part);
-        if (!isNaN(n) && n >= 1 && n <= totalPages) newSet.add(n);
-      }
-    }
-    setSelectedPages(newSet);
-    setRangeInput('');
   };
 
   const startSplit = () => {
@@ -147,20 +127,7 @@ export default function PdfSplit({ onBack }: Props) {
             <span>All</span>
           </label>
         </header>
-        {/* Range quick-select */}
-        <div style={{ display: 'flex', gap: 8, padding: '8px 16px', flexShrink: 0, alignItems: 'center' }}>
-          <input
-            className="name-input"
-            style={{ marginBottom: 0, flex: 1, padding: '6px 12px', fontSize: 13 }}
-            placeholder="e.g. 5-20 or 1,3,7-10"
-            value={rangeInput}
-            onChange={(e) => setRangeInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') applyRange(); }}
-          />
-          <button className="btn-primary" style={{ padding: '6px 14px', fontSize: 12 }} disabled={!rangeInput.trim()} onClick={applyRange}>
-            Select
-          </button>
-        </div>
+        {/* Page grid */}
         <div className="pages-grid">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <div key={p} className={`page-thumb ${selectedPages.has(p) ? 'selected' : ''}`} onClick={() => togglePage(p)}>
