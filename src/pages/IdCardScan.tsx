@@ -32,6 +32,7 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
   const [camReady, setCamReady] = useState(false);
   const [sideToast, setSideToast] = useState<string | null>(null);
   const touchStartX = useRef(0);
+  const [retaking, setRetaking] = useState(false);
 
   const startCam = useCallback(()=>{setCamReady(false);navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}}}).then(s=>{streamRef.current=s;if(videoRef.current)videoRef.current.srcObject=s;setCamReady(true);}).catch(()=>setCamReady(false));},[]);
   const stopCam = useCallback(()=>{if(streamRef.current){streamRef.current.getTracks().forEach(t=>t.stop());streamRef.current=null;}},[]);
@@ -134,11 +135,11 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
         },'image/jpeg',0.92);
         return;
       }
-      if(side==='front'){setFrontUrl(u);if(mode==='single')setStep('preview');else{setSide('back');setSideToast('Front side captured! Now scan the back side.');setTimeout(()=>setSideToast(null),2500);}}
-      else{setBackUrl(u);setStep('preview');}
+      if(side==='front'){setFrontUrl(u);if(mode==='single'||retaking){setRetaking(false);setStep('adjust');}else{setSide('back');setSideToast('Front side captured! Now scan the back side.');setTimeout(()=>setSideToast(null),2500);}}
+      else{setBackUrl(u);setRetaking(false);setStep('adjust');}
     },'image/jpeg',0.92);
   };
-  const handleGallery=(e:React.ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;const u=URL.createObjectURL(f);if(side==='front'){setFrontUrl(u);if(mode==='single')setStep('preview');else{setSide('back');setSideToast('Front side captured! Now scan the back side.');setTimeout(()=>setSideToast(null),2500);}}else{setBackUrl(u);setStep('preview');}e.target.value='';};
+  const handleGallery=(e:React.ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;const u=URL.createObjectURL(f);if(side==='front'){setFrontUrl(u);if(mode==='single'||retaking){setRetaking(false);setStep('adjust');}else{setSide('back');setSideToast('Front side captured! Now scan the back side.');setTimeout(()=>setSideToast(null),2500);}}else{setBackUrl(u);setRetaking(false);setStep('adjust');}e.target.value='';};
   const goBack=()=>{stopCam();onBack();};
   const rotate=()=>setRots(p=>{const n=[...p];n[adjustIdx]=(n[adjustIdx]+90)%360;return n;});
   const flt=filter==='bw'?'grayscale(1) contrast(2)':filter==='gray'?'grayscale(1)':filter==='magic'?'contrast(1.3) brightness(1.1) saturate(0.3)':'none';
@@ -366,7 +367,7 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
         <button className={`bar-btn ${cropping ? 'bar-btn-active' : ''}`} onClick={() => setCropping(!cropping)} disabled={!canvasReady}>
           <span className="bar-icon">✂</span><span>Crop</span>
         </button>
-        <button className="bar-btn" onClick={()=>{setCropping(false);setSide(adjustIdx===0?'front':'back');setStep('shoot');}} disabled={cropping}>
+        <button className="bar-btn" onClick={()=>{setCropping(false);setRetaking(true);setSide(adjustIdx===0?'front':'back');setStep('shoot');}} disabled={cropping}>
           <span className="bar-icon">📷</span><span>Retake</span>
         </button>
       </div>
