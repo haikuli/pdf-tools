@@ -200,7 +200,7 @@ export default function PdfSplit({ onBack }: Props) {
       <div className="done-card" style={{ flex: 1, justifyContent: 'center' }}>
         <div className="done-check">✓</div>
         <p className="done-success">Extracted successfully!</p>
-        <div className="pdf-preview"><div className="pdf-thumb-placeholder">PDF</div></div>
+        <div className="pdf-preview"><img src="https://picsum.photos/seed/extractdone/140/180" alt="PDF" className="pdf-thumb" /></div>
         <p className="pdf-name">{fileName}</p>
         <p className="pdf-meta">Pictures/MXPlayer/PDF/</p>
         <div className="done-actions">

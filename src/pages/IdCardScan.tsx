@@ -299,7 +299,7 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
 
   if(step==='done')return(
     <div className="page"><header className="topbar"><button className="btn-icon" onClick={onBack}>←</button><h1 className="topbar-title">PDF Converted</h1></header>
-      <div className="done-card" style={{flex:1,justifyContent:'center'}}><div className="done-check">✓</div><p className="done-success">Converted successfully!</p><div className="pdf-preview"><div className="pdf-thumb-placeholder">PDF</div></div><p className="pdf-name">{pdfName}.pdf</p><p className="pdf-meta">Documents/MXPlayer/PDF/</p>
+      <div className="done-card" style={{flex:1,justifyContent:'center'}}><div className="done-check">✓</div><p className="done-success">Converted successfully!</p><div className="pdf-preview"><img src="https://picsum.photos/seed/idcarddone/140/180" alt="PDF" className="pdf-thumb" /></div><p className="pdf-name">{pdfName}.pdf</p><p className="pdf-meta">Documents/MXPlayer/PDF/</p>
         <div className="done-actions"><button className="btn-primary btn-lg" onClick={onBack}>Share</button><button className="btn-secondary btn-lg" onClick={onBack}>Open</button></div></div></div>
   );
 

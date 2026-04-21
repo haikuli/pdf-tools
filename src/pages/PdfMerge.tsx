@@ -225,7 +225,7 @@ export default function PdfMerge({ onBack }: Props) {
       <div className="done-card" style={{ flex: 1, justifyContent: 'center' }}>
         <div className="done-check">✓</div>
         <p className="done-success">Merged successfully!</p>
-        <div className="pdf-preview"><div className="pdf-thumb-placeholder">PDF</div></div>
+        <div className="pdf-preview"><img src="https://picsum.photos/seed/mergedone/140/180" alt="PDF" className="pdf-thumb" /></div>
         <p className="pdf-name">{pdfName}.pdf</p>
         <p className="pdf-meta">Documents/</p>
         <div className="done-actions">
