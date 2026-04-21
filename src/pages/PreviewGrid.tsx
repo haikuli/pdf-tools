@@ -48,7 +48,6 @@ export default function PreviewGrid({
         <button className="btn-icon" onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}>
           {viewMode === 'grid' ? '☰' : '▦'}
         </button>
-        <button className="btn-primary" onClick={preCheck} disabled={images.length === 0}>Convert</button>
       </header>
 
       {viewMode === 'grid' ? (
@@ -90,6 +89,10 @@ export default function PreviewGrid({
           ))}
         </div>
       )}
+
+      <div className="bottom-bar" style={{ flexDirection: 'column', gap: 8 }}>
+        <button className="btn-primary btn-confirm-full" onClick={preCheck} disabled={images.length === 0}>Convert</button>
+      </div>
 
       {/* Missing images dialog */}
       {missingDialog && (

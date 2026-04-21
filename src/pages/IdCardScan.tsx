@@ -250,7 +250,7 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
   // Preview
   if(step==='preview')return(
     <div className="page">
-      <header className="topbar"><button className="btn-icon" onClick={()=>setShowQuitDialog(true)}>←</button><h1 className="topbar-title">Preview</h1><button className="btn-primary" onClick={()=>setStep('naming')}>Convert</button></header>
+      <header className="topbar"><button className="btn-icon" onClick={()=>setShowQuitDialog(true)}>←</button><h1 className="topbar-title">Preview</h1></header>
       <div className="idcard-a4-page"><div className="idcard-a4-inner">
         {frontUrl&&<img src={frontUrl} alt="F" style={{transform:`rotate(${rots[0]}deg)`,filter:flt}}/>}
         {backUrl&&<img src={backUrl} alt="B" style={{transform:`rotate(${rots[1]}deg)`,filter:flt}}/>}
@@ -258,6 +258,7 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
       <div className="bottom-bar editor-bar">
         <button className="bar-btn" onClick={()=>{setAdjustIdx(0);setStep('adjust');}}><span className="bar-icon">✏️</span><span>Edit</span></button>
         <button className="bar-btn" onClick={()=>setShowSheet('filter')}><span className="bar-icon">🎨</span><span>Filter</span></button>
+        <button className="btn-primary" style={{marginLeft:'auto'}} onClick={()=>setStep('naming')}>Convert</button>
       </div>
       {showSheet==='filter'&&<><div className="sheet-backdrop" onClick={()=>setShowSheet(null)}/><div className="bottom-sheet"><h2>Choose Filter</h2><div className="filter-sheet-options">
         {([['original','Original'],['magic','Magic'],['gray','Grayscale'],['bw','B&W']]as const).map(([k,l])=>(
