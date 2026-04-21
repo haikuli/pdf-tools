@@ -75,6 +75,7 @@ const MOCK_PAGES = Array.from({ length: 6 }, (_, i) => ({
 export default function PdfToImage({ onBack, mode }: Props) {
   const [step, setStep] = useState<Step>('select-pdf');
   const [selectedPdf, setSelectedPdf] = useState<PdfFile | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [format, setFormat] = useState<OutputFormat>('JPEG');
   const [pages, setPages] = useState(MOCK_PAGES);
   const [progress, setProgress] = useState(0);
@@ -96,15 +97,18 @@ export default function PdfToImage({ onBack, mode }: Props) {
   };
 
   if (step === 'select-pdf') {
+    const filtered = MOCK_PDFS.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
     return (
       <div className="page">
         <header className="topbar">
           <button className="btn-icon" onClick={onBack}>←</button>
           <h1 className="topbar-title">{title}</h1>
         </header>
-        <p style={{ padding: '12px 16px 4px', fontSize: 13, color: 'var(--text2)' }}>Select a PDF to convert</p>
+        <div style={{ padding: '8px 16px', flexShrink: 0 }}>
+          <input className="name-input" style={{ marginBottom: 0, padding: '8px 12px', fontSize: 13 }} placeholder="Search files..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+        </div>
         <div className="file-list">
-          {MOCK_PDFS.map((f) => (
+          {filtered.map((f) => (
             <div key={f.id} className="file-item" onClick={() => { setSelectedPdf(f); setStep('pages'); }}>
               <PdfThumb type={f.thumbType} />
               <div className="file-info">

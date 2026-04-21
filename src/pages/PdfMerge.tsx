@@ -17,6 +17,7 @@ const MOCK = [
 export default function PdfMerge({ onBack }: Props) {
   const [step, setStep] = useState<Step>('select');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
   const [files, setFiles] = useState<MergeFile[]>([]);
   const [progress, setProgress] = useState(0);
   const [pdfName, setPdfName] = useState('Merged_20241215');
@@ -58,6 +59,7 @@ export default function PdfMerge({ onBack }: Props) {
   };
 
   if (step === 'select') {
+    const filtered = MOCK.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
     return (
       <div className="page">
         <header className="topbar">
@@ -65,8 +67,11 @@ export default function PdfMerge({ onBack }: Props) {
           <h1 className="topbar-title">Merge PDF</h1>
           <button className="btn-primary" disabled={selected.size < 2} onClick={confirmSelect}>Next ({selected.size})</button>
         </header>
+        <div style={{ padding: '8px 16px', flexShrink: 0 }}>
+          <input className="name-input" style={{ marginBottom: 0, padding: '8px 12px', fontSize: 13 }} placeholder="Search files..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+        </div>
         <div className="file-list">
-          {MOCK.map((f) => (
+          {filtered.map((f) => (
             <div key={f.id} className={`file-item ${selected.has(f.id) ? 'file-selected' : ''}`} onClick={() => toggleSelect(f.id)}>
               <span className={`checkbox ${selected.has(f.id) ? 'checked' : ''}`}>{selected.has(f.id) ? '✓' : ''}</span>
               <div className="file-thumb">📄</div>

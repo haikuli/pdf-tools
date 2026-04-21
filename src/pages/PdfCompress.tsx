@@ -79,6 +79,7 @@ function formatSize(bytes: number): string {
 export default function PdfCompress({ onBack }: Props) {
   const [step, setStep] = useState<Step>('select-pdf');
   const [selectedPdf, setSelectedPdf] = useState<PdfFile | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [level, setLevel] = useState<Level>('small');
   const [progress, setProgress] = useState(0);
 
@@ -107,15 +108,18 @@ export default function PdfCompress({ onBack }: Props) {
   };
 
   if (step === 'select-pdf') {
+    const filtered = MOCK_PDFS.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
     return (
       <div className="page">
         <header className="topbar">
           <button className="btn-icon" onClick={onBack}>←</button>
           <h1 className="topbar-title">Compress PDF</h1>
         </header>
-        <p style={{ padding: '12px 16px 4px', fontSize: 13, color: 'var(--text2)' }}>Select a PDF to compress</p>
+        <div style={{ padding: '8px 16px', flexShrink: 0 }}>
+          <input className="name-input" style={{ marginBottom: 0, padding: '8px 12px', fontSize: 13 }} placeholder="Search files..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+        </div>
         <div className="file-list">
-          {MOCK_PDFS.map((f) => (
+          {filtered.map((f) => (
             <div key={f.id} className="file-item" onClick={() => { setSelectedPdf(f); setStep('level'); }}>
               <PdfThumb type={f.thumbType} />
               <div className="file-info">
