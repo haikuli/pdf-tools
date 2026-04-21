@@ -159,6 +159,7 @@ export default function PdfMerge({ onBack }: Props) {
                 <span className="file-name">{f.name}</span>
                 <span className="file-meta">{f.size}</span>
               </div>
+              <button className="btn-icon" style={{ fontSize: 14, padding: '4px', color: 'var(--text2)' }} onClick={() => setFiles((prev) => prev.filter((x) => x.id !== f.id))}>✕</button>
               <span className="btn-icon" style={{ cursor: 'grab', fontSize: 18, color: 'var(--text2)' }}>☰</span>
             </div>
           ))}
