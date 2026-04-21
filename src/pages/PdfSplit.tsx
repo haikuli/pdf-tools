@@ -202,7 +202,7 @@ export default function PdfSplit({ onBack }: Props) {
         <p className="done-success">Extracted successfully!</p>
         <div className="pdf-preview"><img src="https://picsum.photos/seed/extractdone/140/180" alt="PDF" className="pdf-thumb" /></div>
         <p className="pdf-name">{fileName}</p>
-        <p className="pdf-meta">Pictures/MXPlayer/PDF/</p>
+        <p className="pdf-meta">Documents/MXPlayer/PDF/</p>
         <div className="done-actions">
           <button className="btn-primary btn-lg" onClick={onBack}>Share</button>
           <button className="btn-secondary btn-lg" onClick={() => setShowPreview(true)}>Open</button>
