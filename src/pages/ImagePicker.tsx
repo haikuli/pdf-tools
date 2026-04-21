@@ -457,7 +457,7 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
         const handTop = gridTop + 4 + pos.row * (cellW + 4) + cellW / 2 - 14;
 
         return (
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }} onClick={dismissGuide}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }} onClick={dismissGuide}>
             <div style={{
               position: 'absolute',
               top: handTop,
@@ -466,7 +466,7 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
               transition: guideStep > 0 ? 'top 0.4s ease-out, left 0.4s ease-out' : 'none',
               opacity: guideStep > 0 ? 1 : 0,
             }}>👆</div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, paddingBottom: 80 }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, paddingBottom: 80, background: 'linear-gradient(transparent, rgba(0,0,0,0.8) 30%)', paddingTop: 40 }} onClick={(e) => e.stopPropagation()}>
               <p style={{ color: '#fff', fontSize: 16, fontWeight: 600, textAlign: 'center' }}>Swipe to select multiple</p>
               <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, textAlign: 'center', padding: '0 32px' }}>Long press and drag across images to quickly select or deselect</p>
               <button className="btn-primary" style={{ padding: '10px 32px', marginTop: 8 }} onClick={dismissGuide}>Got it</button>
