@@ -181,6 +181,7 @@ export default function PdfSplit({ onBack }: Props) {
       <div className="done-card" style={{ flex: 1, justifyContent: 'center' }}>
         <div className="done-check">✓</div>
         <p className="done-success">Extracted successfully!</p>
+        <div className="pdf-preview"><div className="pdf-thumb-placeholder">PDF</div></div>
         <p className="pdf-name">{fileName}</p>
         <p className="pdf-meta">Pictures/MXPlayer/PDF/</p>
         <div className="done-actions">

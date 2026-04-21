@@ -187,7 +187,7 @@ export default function PdfCompress({ onBack }: Props) {
           <>
             <div className="done-check" style={{ background: '#e8f5e9', color: '#4caf50' }}>✓</div>
             <p className="done-success" style={{ color: 'var(--text2)' }}>Already optimized</p>
-            <p className="pdf-meta">This file is already well compressed. No significant reduction is possible.</p>
+            <div className="pdf-preview"><div className="pdf-thumb-placeholder">PDF</div></div>
             <p className="pdf-name">{selectedPdf?.name}</p>
             <p className="pdf-meta">{selectedPdf?.size}</p>
             <div className="done-actions">
@@ -198,6 +198,7 @@ export default function PdfCompress({ onBack }: Props) {
           <>
             <div className="done-check">✓</div>
             <p className="done-success">Reduced by {actualReduction}%</p>
+            <div className="pdf-preview"><div className="pdf-thumb-placeholder">PDF</div></div>
             <p className="pdf-meta">{selectedPdf?.size} → {formatSize(actualCompressedSize)}</p>
             <p className="pdf-name">{selectedPdf?.name.replace('.pdf', '')}_compressed.pdf</p>
             <p className="pdf-meta">Documents/MXPlayer/PDF/</p>
