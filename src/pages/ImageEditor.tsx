@@ -191,14 +191,16 @@ export default function ImageEditor({
           }}
         />
 
-        {/* Fit mode with margin: wrap canvas in a white frame */}
-        {!showPageFrame && marginPx > 0 && !cropping && (
-          <div className="editor-image-container editor-margin-preview" style={{ padding: marginPx, position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img
-              src={previewUrl || ''}
-              alt=""
-              style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', filter: filterStyle, display: previewUrl ? 'block' : 'none' }}
-            />
+        {/* Fit mode with margin: show image with inner padding */}
+        {!showPageFrame && marginPx > 0 && !cropping && previewUrl && (
+          <div style={{ position: 'absolute', display: 'flex', alignItems: 'center', justifyContent: 'center', maxWidth: '100%', maxHeight: '100%' }}>
+            <div style={{ background: '#fff', boxShadow: '0 1px 6px rgba(0,0,0,0.15)', padding: marginPx, display: 'inline-flex' }}>
+              <img
+                src={previewUrl}
+                alt=""
+                style={{ maxWidth: `calc(75vw - ${marginPx * 2}px)`, maxHeight: `calc(60vh - ${marginPx * 2}px)`, objectFit: 'contain', filter: filterStyle, display: 'block' }}
+              />
+            </div>
           </div>
         )}
 
