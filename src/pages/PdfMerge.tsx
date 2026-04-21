@@ -141,7 +141,7 @@ export default function PdfMerge({ onBack }: Props) {
       <div className="page">
         <header className="topbar">
           <button className="btn-icon" onClick={() => setStep('select')}>←</button>
-          <h1 className="topbar-title">Reorder Files</h1>
+          <h1 className="topbar-title">Merge PDF</h1>
           <button className="btn-primary" onClick={() => setShowName(true)}>Merge</button>
         </header>
         <p className="grid-hint" style={{ padding: '12px 16px' }}>Drag to reorder</p>
@@ -159,7 +159,7 @@ export default function PdfMerge({ onBack }: Props) {
                 <span className="file-name">{f.name}</span>
                 <span className="file-meta">{f.size}</span>
               </div>
-              <button className="btn-icon" onClick={() => setFiles((prev) => prev.filter((x) => x.id !== f.id))}>✕</button>
+              <span className="btn-icon" style={{ cursor: 'grab', fontSize: 18, color: 'var(--text2)' }}>☰</span>
             </div>
           ))}
         </div>
