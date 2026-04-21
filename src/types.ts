@@ -44,7 +44,7 @@ export type Page =
   // Image to PDF
   | 'picker' | 'picker-camera' | 'retake-camera' | 'editor' | 'reorder' | 'preview' | 'converting' | 'done'
   // Scan to PDF
-  | 'scan-capture' | 'scan-crop' | 'scan-retake' | 'scan-filter' | 'scan-preview' | 'scan-converting' | 'scan-done'
+  | 'scan-capture' | 'scan-crop' | 'scan-retake' | 'scan-reorder' | 'scan-filter' | 'scan-preview' | 'scan-converting' | 'scan-done'
   // ID Card Scan
   | 'idcard-notice' | 'idcard-front' | 'idcard-back' | 'idcard-preview' | 'idcard-converting' | 'idcard-done'
   // PDF Viewer

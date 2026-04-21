@@ -255,7 +255,10 @@ export default function App() {
           onRetake={() => {
             const img = scanImages[scanIndex];
             if (img) { setScanRetakeId(img.id); setPage('scan-retake'); }
-          }} />
+          }}
+          onReorder={() => { setReorderSnapshot([...scanImages]); setPage('scan-reorder'); }}
+          onScan={() => setPage('scan-capture')}
+        />
       )}
       {page === 'scan-retake' && (
         <ScanCapture onDone={(captured) => {
@@ -265,6 +268,22 @@ export default function App() {
           setScanRetakeId(null);
           setPage('scan-crop');
         }} onBack={() => { setScanRetakeId(null); setPage('scan-crop'); }} />
+      )}
+      {page === 'scan-reorder' && (
+        <ReorderPage
+          images={scanImages}
+          reorderImages={(from, to) => {
+            setScanImages((prev) => {
+              const arr = [...prev];
+              const [moved] = arr.splice(from, 1);
+              arr.splice(to, 0, moved);
+              return arr;
+            });
+          }}
+          removeImage={(id) => setScanImages((prev) => prev.filter((i) => i.id !== id))}
+          onDone={() => { setReorderSnapshot(null); setPage('scan-crop'); }}
+          onBack={() => { if (reorderSnapshot) setScanImages(reorderSnapshot); setReorderSnapshot(null); setPage('scan-crop'); }}
+        />
       )}
       {page === 'scan-preview' && (
         <PreviewGrid images={scanImages} addImages={addScanImages} removeImage={removeScanImage} onConvert={handleScanConvert} onBack={() => setPage('scan-crop')} title="Preview" onTakePhoto={() => setPage('scan-capture')} />
