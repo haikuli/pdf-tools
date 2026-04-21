@@ -76,9 +76,7 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
   const swipeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Onboarding guide
-  const [showGuide, setShowGuide] = useState(() => {
-    try { return !localStorage.getItem('picker_guide_seen'); } catch { return true; }
-  });
+  const [showGuide, setShowGuide] = useState(true); // TODO: restore localStorage check
   const [guideStep, setGuideStep] = useState(0);
   const [guideHighlight, setGuideHighlight] = useState<Set<number>>(new Set());
   const guideTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -437,23 +435,43 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
       )}
 
       {/* Swipe multi-select onboarding guide */}
-      {showGuide && (
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }} onClick={dismissGuide}>
-          {/* Hand animation - moves across grid cells */}
-          <div style={{
-            position: 'absolute', top: 170,
-            left: `calc(${8 + (guideStep > 0 ? (guideStep - 1) : 0) * 33}% + 16px)`,
-            fontSize: 28, pointerEvents: 'none', zIndex: 201,
-            transition: guideStep > 0 ? 'left 0.4s ease-out' : 'none',
-            opacity: guideStep > 0 ? 1 : 0,
-          }}>👆</div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, paddingBottom: 80 }} onClick={(e) => e.stopPropagation()}>
-            <p style={{ color: '#fff', fontSize: 16, fontWeight: 600, textAlign: 'center' }}>Swipe to select multiple</p>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, textAlign: 'center', padding: '0 32px' }}>Long press and drag across images to quickly select or deselect</p>
-            <button className="btn-primary" style={{ padding: '10px 32px', marginTop: 8 }} onClick={dismissGuide}>Got it</button>
+      {showGuide && (() => {
+        const gridEl = gridRef.current;
+        const shellEl = gridEl?.closest('.app-shell') || gridEl?.closest('.page');
+        const gridTop = gridEl && shellEl ? gridEl.getBoundingClientRect().top - shellEl.getBoundingClientRect().top : 148;
+        // Each cell is ~33.3% width, grid has 4px padding and 4px gap
+        const cellW = gridEl ? (gridEl.clientWidth - 8) / 3 : 120;
+        // First cell is Camera, images start at cell index 1
+        // guideStep 1 = first image (cell 1), guideStep 2 = cell 2, etc.
+        // Row 0: camera(0), img0(1), img1(2). Row 1: img2(3), img3(4), img4(5)
+        const cellPositions = [
+          { col: 1, row: 0 }, // img 0
+          { col: 2, row: 0 }, // img 1
+          { col: 0, row: 1 }, // img 2
+          { col: 1, row: 1 }, // img 3
+        ];
+        const pos = guideStep > 0 && guideStep <= 4 ? cellPositions[guideStep - 1] : cellPositions[0];
+        const handLeft = 4 + pos.col * (cellW + 4) + cellW / 2 - 14;
+        const handTop = gridTop + 4 + pos.row * (cellW + 4) + cellW / 2 - 14;
+
+        return (
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }} onClick={dismissGuide}>
+            <div style={{
+              position: 'absolute',
+              top: handTop,
+              left: handLeft,
+              fontSize: 28, pointerEvents: 'none', zIndex: 201,
+              transition: guideStep > 0 ? 'top 0.4s ease-out, left 0.4s ease-out' : 'none',
+              opacity: guideStep > 0 ? 1 : 0,
+            }}>👆</div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, paddingBottom: 80 }} onClick={(e) => e.stopPropagation()}>
+              <p style={{ color: '#fff', fontSize: 16, fontWeight: 600, textAlign: 'center' }}>Swipe to select multiple</p>
+              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, textAlign: 'center', padding: '0 32px' }}>Long press and drag across images to quickly select or deselect</p>
+              <button className="btn-primary" style={{ padding: '10px 32px', marginTop: 8 }} onClick={dismissGuide}>Got it</button>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
