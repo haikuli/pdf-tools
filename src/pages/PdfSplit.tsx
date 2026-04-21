@@ -176,7 +176,7 @@ export default function PdfSplit({ onBack }: Props) {
     <div className="page">
       <header className="topbar">
         <button className="btn-icon" onClick={onBack}>←</button>
-        <h1 className="topbar-title">Complete</h1>
+        <h1 className="topbar-title">Extract PDF</h1>
       </header>
       <div className="done-card" style={{ flex: 1, justifyContent: 'center' }}>
         <div className="done-check">✓</div>

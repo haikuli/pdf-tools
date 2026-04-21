@@ -180,7 +180,7 @@ export default function PdfCompress({ onBack }: Props) {
     <div className="page">
       <header className="topbar">
         <button className="btn-icon" onClick={onBack}>←</button>
-        <h1 className="topbar-title">Compressed</h1>
+        <h1 className="topbar-title">Compress PDF</h1>
       </header>
       <div className="done-card" style={{ flex: 1, justifyContent: 'center' }}>
         {noSignificantReduction ? (
