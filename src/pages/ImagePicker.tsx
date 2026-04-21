@@ -226,7 +226,7 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
         <span className="dropdown-arrow">▾</span>
       </div>
 
-      <div className="picker-grid" ref={gridRef} onTouchStart={handleGridTouchStart} onTouchMove={handleGridTouchMove} onTouchEnd={handleGridTouchEnd} style={showGuide ? { position: 'relative', zIndex: 201, pointerEvents: 'none' } : undefined}>
+      <div className="picker-grid" ref={gridRef} onTouchStart={handleGridTouchStart} onTouchMove={handleGridTouchMove} onTouchEnd={handleGridTouchEnd}>
         {onCamera && (
           <button className="add-card" onClick={onCamera}>
             <span className="add-icon">📷</span>
@@ -236,17 +236,15 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
 
         {displayImages.map((img, idx) => {
           const order = getOrder(img.id);
-          const guideOrder = showGuide && guideHighlight.has(idx) ? idx + 1 : 0;
           return (
             <div
               key={img.id}
               data-idx={idx}
-              className={`picker-thumb ${order > 0 || guideOrder > 0 ? 'selected' : ''}`}
+              className={`picker-thumb ${order > 0 ? 'selected' : ''}`}
               onClick={() => { if (!swiping) toggleSelect(img.id); }}
             >
               <img src={img.url} alt={img.name} />
               <button className="picker-preview-btn" onClick={(e) => { e.stopPropagation(); setPreviewIndex(idx); }}>⤢</button>
-              {guideOrder > 0 && !order && <span className="thumb-order">{guideOrder}</span>}
               {order > 0 && <span className="thumb-order">{order}</span>}
             </div>
           );
@@ -437,42 +435,56 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
       )}
 
       {/* Swipe multi-select onboarding guide */}
-      {showGuide && (() => {
-        const gridEl = gridRef.current;
-        const pageEl = gridEl?.closest('.page');
-        const gridTop = gridEl && pageEl ? gridEl.getBoundingClientRect().top - pageEl.getBoundingClientRect().top : 148;
-        const gridLeft = gridEl && pageEl ? gridEl.getBoundingClientRect().left - pageEl.getBoundingClientRect().left : 0;
-        const gridWidth = gridEl ? gridEl.clientWidth : 400;
-        const cellW = (gridWidth - 4 * 2 - 4 * 2) / 3; // padding 4, gap 4
-        // Grid layout: camera(col0,row0), img0(col1,row0), img1(col2,row0), img2(col0,row1), img3(col1,row1)
-        const cellPositions = [
-          { col: 1, row: 0 },
-          { col: 2, row: 0 },
-          { col: 0, row: 1 },
-          { col: 1, row: 1 },
-        ];
-        const pos = guideStep > 0 && guideStep <= 4 ? cellPositions[guideStep - 1] : cellPositions[0];
-        const handLeft = gridLeft + 4 + pos.col * (cellW + 4) + cellW / 2 - 14;
-        const handTop = gridTop + 4 + pos.row * (cellW + 4) + cellW / 2 - 14;
-
-        return (
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }} onClick={dismissGuide}>
-            <div style={{
-              position: 'absolute',
-              top: handTop,
-              left: handLeft,
-              fontSize: 28, pointerEvents: 'none', zIndex: 203,
-              transition: guideStep > 0 ? 'top 0.4s ease-out, left 0.4s ease-out' : 'none',
-              opacity: guideStep > 0 ? 1 : 0,
-            }}>👆</div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, paddingBottom: 80, background: 'linear-gradient(transparent, rgba(0,0,0,0.8) 30%)', paddingTop: 40, zIndex: 203 }} onClick={(e) => e.stopPropagation()}>
-              <p style={{ color: '#fff', fontSize: 16, fontWeight: 600, textAlign: 'center' }}>Swipe to select multiple</p>
-              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, textAlign: 'center', padding: '0 32px' }}>Long press and drag across images to quickly select or deselect</p>
-              <button className="btn-primary" style={{ padding: '10px 32px', marginTop: 8 }} onClick={dismissGuide}>Got it</button>
-            </div>
+      {showGuide && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', pointerEvents: 'none' }}>
+          {/* Dark overlay */}
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
+          {/* Replicated image grid with highlights inside overlay */}
+          <div style={{ position: 'relative', marginTop: gridRef.current ? gridRef.current.getBoundingClientRect().top - (gridRef.current.closest('.page')?.getBoundingClientRect().top || 0) : 148, padding: 4, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4 }}>
+            {/* Camera placeholder - empty */}
+            <div style={{ aspectRatio: '1' }} />
+            {/* First 5 images - show highlights on first 4 */}
+            {displayImages.slice(0, 5).map((img, idx) => {
+              const highlighted = guideHighlight.has(idx);
+              return (
+                <div key={img.id} style={{ aspectRatio: '1', position: 'relative', borderRadius: 8, overflow: 'hidden', border: highlighted ? '2px solid var(--primary)' : '2px solid transparent' }}>
+                  <img src={img.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: highlighted ? 1 : 0 }} />
+                  {highlighted && (
+                    <span style={{ position: 'absolute', top: 4, right: 4, background: 'var(--primary)', color: '#fff', width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{idx + 1}</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        );
-      })()}
+          {/* Hand emoji */}
+          {guideStep > 0 && (() => {
+            const gridEl = gridRef.current;
+            const pageEl = gridEl?.closest('.page');
+            const gridTop = gridEl && pageEl ? gridEl.getBoundingClientRect().top - pageEl.getBoundingClientRect().top : 148;
+            const gridWidth = gridEl ? gridEl.clientWidth : 400;
+            const cellW = (gridWidth - 4 * 2 - 4 * 2) / 3;
+            const positions = [
+              { col: 1, row: 0 }, { col: 2, row: 0 }, { col: 0, row: 1 }, { col: 1, row: 1 },
+            ];
+            const pos = positions[Math.min(guideStep - 1, 3)];
+            return (
+              <div style={{
+                position: 'absolute',
+                top: gridTop + 4 + pos.row * (cellW + 4) + cellW * 0.6,
+                left: 4 + pos.col * (cellW + 4) + cellW * 0.3,
+                fontSize: 28,
+                transition: 'top 0.4s ease-out, left 0.4s ease-out',
+              }}>👆</div>
+            );
+          })()}
+          {/* Text and button */}
+          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, paddingBottom: 80, background: 'linear-gradient(transparent, rgba(0,0,0,0.85) 30%)', paddingTop: 40, pointerEvents: 'auto' }} onClick={dismissGuide}>
+            <p style={{ color: '#fff', fontSize: 16, fontWeight: 600, textAlign: 'center' }}>Swipe to select multiple</p>
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, textAlign: 'center', padding: '0 32px' }}>Long press and drag across images to quickly select or deselect</p>
+            <button className="btn-primary" style={{ padding: '10px 32px', marginTop: 8 }} onClick={dismissGuide}>Got it</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
