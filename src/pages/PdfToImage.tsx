@@ -80,7 +80,7 @@ export default function PdfToImage({ onBack, mode }: Props) {
   const [pages, setPages] = useState(MOCK_PAGES);
   const [progress, setProgress] = useState(0);
 
-  const title = mode === 'long' ? 'PDF to Long Image' : 'PDF to Image';
+  const _title = mode === 'long' ? 'PDF to Long Image' : 'PDF to Image'; void _title;
 
   const togglePage = (id: number) => {
     setPages((prev) => prev.map((p) => p.id === id ? { ...p, selected: !p.selected } : p));
@@ -102,7 +102,7 @@ export default function PdfToImage({ onBack, mode }: Props) {
       <div className="page">
         <header className="topbar">
           <button className="btn-icon" onClick={onBack}>←</button>
-          <h1 className="topbar-title">{title}</h1>
+          <h1 className="topbar-title">Select File</h1>
         </header>
         <div style={{ padding: '8px 16px', flexShrink: 0 }}>
           <input className="name-input" style={{ marginBottom: 0, padding: '8px 12px', fontSize: 13 }} placeholder="Search files..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />

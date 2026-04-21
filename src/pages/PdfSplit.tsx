@@ -99,7 +99,7 @@ export default function PdfSplit({ onBack }: Props) {
       <div className="page">
         <header className="topbar">
           <button className="btn-icon" onClick={onBack}>←</button>
-          <h1 className="topbar-title">Extract PDF</h1>
+          <h1 className="topbar-title">Select File</h1>
         </header>
         <div style={{ padding: '8px 16px', flexShrink: 0 }}>
           <input className="name-input" style={{ marginBottom: 0, padding: '8px 12px', fontSize: 13 }} placeholder="Search files..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />

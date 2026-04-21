@@ -119,7 +119,7 @@ export default function PdfMerge({ onBack }: Props) {
       <div className="page">
         <header className="topbar">
           <button className="btn-icon" onClick={onBack}>←</button>
-          <h1 className="topbar-title">Merge PDF</h1>
+          <h1 className="topbar-title">Select Files</h1>
           <label className="select-all" onClick={toggleAll}>
             <span className={`checkbox ${allSelected ? 'checked' : ''}`}>{allSelected ? '✓' : ''}</span>
             <span>All</span>
