@@ -97,7 +97,7 @@ export default function PdfSplit({ onBack }: Props) {
       <div className="page">
         <header className="topbar">
           <button className="btn-icon" onClick={onBack}>←</button>
-          <h1 className="topbar-title">Split PDF</h1>
+          <h1 className="topbar-title">Extract Pages</h1>
         </header>
         <p style={{ padding: '12px 16px 4px', fontSize: 13, color: 'var(--text2)' }}>Select a PDF</p>
         <div className="file-list">
