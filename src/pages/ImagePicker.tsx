@@ -495,9 +495,9 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
             );
           })()}
           {/* Text and button */}
-          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, paddingBottom: 60, paddingTop: 24, pointerEvents: 'auto' }} onClick={dismissGuide}>
+          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, paddingBottom: 60, paddingTop: 20, pointerEvents: 'auto', background: 'rgba(15,15,19,0.95)', borderTop: '1px solid rgba(255,255,255,0.1)' }} onClick={dismissGuide}>
             <p style={{ color: '#fff', fontSize: 17, fontWeight: 600, textAlign: 'center' }}>Swipe to select multiple</p>
-            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, textAlign: 'center', padding: '0 32px' }}>Long press and drag across images to quickly select or deselect</p>
+            <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, textAlign: 'center', padding: '0 32px' }}>Long press and drag across images to quickly select or deselect</p>
             <button className="btn-primary" style={{ padding: '10px 32px', marginTop: 4 }} onClick={dismissGuide}>Got it</button>
           </div>
         </div>
