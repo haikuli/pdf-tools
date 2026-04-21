@@ -412,27 +412,50 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
       )}
 
       {/* Swipe multi-select onboarding guide - overlay on grid */}
-      {showGuide && (
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', flexDirection: 'column' }} onClick={dismissGuide}>
-          {/* Highlight boxes on first row of images */}
-          <div style={{ position: 'absolute', top: 148, left: 4, right: 4, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4, padding: '0 0', pointerEvents: 'none' }}>
-            {[0,1,2,3,4,5].map((n) => (
+      {showGuide && (() => {
+        // Get positions of first 4 actual image thumbs (skip camera button)
+        const thumbs = gridRef.current?.querySelectorAll('.picker-thumb') || [];
+        const gridRect = gridRef.current?.getBoundingClientRect();
+        const positions = Array.from(thumbs).slice(0, 4).map((el) => {
+          const r = el.getBoundingClientRect();
+          return gridRect ? { top: r.top - gridRect.top + (gridRef.current?.scrollTop || 0), left: r.left - gridRect.left, width: r.width, height: r.height } : null;
+        }).filter(Boolean) as { top: number; left: number; width: number; height: number }[];
+
+        return (
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', flexDirection: 'column' }} onClick={dismissGuide}>
+            {positions.map((pos, n) => (
               <div key={n} style={{
-                aspectRatio: '1',
+                position: 'absolute',
+                top: pos.top + 148,
+                left: pos.left + 4,
+                width: pos.width,
+                height: pos.height,
                 borderRadius: 8,
                 border: '2px solid transparent',
-                animation: n < 4 ? `guide-select-${n} 2.5s ease-in-out infinite` : 'none',
+                animation: `guide-select-${n} 2.5s ease-in-out infinite`,
+                pointerEvents: 'none',
+                zIndex: 201,
               }} />
             ))}
+            {positions.length > 0 && (
+              <div style={{
+                position: 'absolute',
+                top: positions[0].top + 148 + positions[0].height / 2 - 14,
+                left: positions[0].left + 4 + positions[0].width / 2 - 14,
+                fontSize: 28,
+                animation: `guide-hand-swipe-real 2.5s ease-in-out infinite`,
+                pointerEvents: 'none',
+                zIndex: 202,
+              }}>👆</div>
+            )}
+            <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, paddingBottom: 80 }} onClick={(e) => e.stopPropagation()}>
+              <p style={{ color: '#fff', fontSize: 16, fontWeight: 600, textAlign: 'center' }}>Swipe to select multiple</p>
+              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, textAlign: 'center', padding: '0 32px' }}>Long press and drag across images to quickly select or deselect</p>
+              <button className="btn-primary" style={{ padding: '10px 32px', marginTop: 8 }} onClick={dismissGuide}>Got it</button>
+            </div>
           </div>
-          <div style={{ position: 'absolute', top: 160, left: 16, fontSize: 28, animation: 'guide-hand-swipe 2.5s ease-in-out infinite', pointerEvents: 'none', zIndex: 201 }}>👆</div>
-          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, paddingBottom: 80 }} onClick={(e) => e.stopPropagation()}>
-            <p style={{ color: '#fff', fontSize: 16, fontWeight: 600, textAlign: 'center' }}>Swipe to select multiple</p>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, textAlign: 'center', padding: '0 32px' }}>Long press and drag across images to quickly select or deselect</p>
-            <button className="btn-primary" style={{ padding: '10px 32px', marginTop: 8 }} onClick={dismissGuide}>Got it</button>
-          </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

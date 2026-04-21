@@ -1472,6 +1472,14 @@ html, body, #root {
   61%, 100% { transform: translate(0, 0); opacity: 0; }
 }
 
+@keyframes guide-hand-swipe-real {
+  0%, 10% { transform: translate(0, 0); opacity: 1; }
+  20% { transform: translate(0, 0); opacity: 1; }
+  50% { transform: translate(calc(min(80vw, 350px)), 0); opacity: 1; }
+  60% { transform: translate(calc(min(80vw, 350px)), 0); opacity: 0; }
+  61%, 100% { transform: translate(0, 0); opacity: 0; }
+}
+
 @keyframes guide-select-0 {
   0%, 14% { border-color: transparent; background: transparent; }
   15%, 90% { border-color: var(--primary); background: rgba(108,92,231,0.25); }
