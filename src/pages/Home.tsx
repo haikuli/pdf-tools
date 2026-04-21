@@ -36,7 +36,7 @@ const TOOLS = [
   { icon: <PdfToLongImageIcon />, label: 'PDF to Long Image', page: 'pdf2longimg' as Page },
   { icon: <CompressPdfIcon />, label: 'Compress PDF', page: 'compress-level' as Page },
   { icon: <MergePdfIcon />, label: 'Merge PDF', page: 'merge-select' as Page },
-  { icon: <SplitPdfIcon />, label: 'Split PDF', page: 'split-pages' as Page },
+  { icon: <SplitPdfIcon />, label: 'Extract', page: 'split-pages' as Page },
 ];
 
 const MOCK_FILES: PdfFile[] = [
@@ -329,7 +329,7 @@ export default function Home({ onNavigate, onBack }: Props) {
 
             {menuFile === file.id && (
               <div className="file-menu">
-                {['Rename', 'Share', 'PDF to Image', 'PDF to Long Image', 'Merge PDF', 'Split PDF', 'Compress PDF', 'Delete', 'Properties'].map((action) => (
+                {['Rename', 'Share', 'PDF to Image', 'PDF to Long Image', 'Merge PDF', 'Extract Pages', 'Compress PDF', 'Delete', 'Properties'].map((action) => (
                   <button key={action} className="file-menu-item" onClick={() => {
                     setMenuFile(null);
                     if (action === 'Properties') {
