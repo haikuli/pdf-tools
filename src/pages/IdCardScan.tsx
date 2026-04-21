@@ -17,6 +17,7 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
   const [adjustIdx, setAdjustIdx] = useState<0|1>(0);
   const [rots, setRots] = useState([0,0]);
   const [flashOn, setFlashOn] = useState(false);
+  const [showGrid, setShowGrid] = useState(false);
   const [filter, setFilter] = useState<'original'|'bw'|'gray'|'magic'>('original');
   const [showSheet, setShowSheet] = useState<null|'retake'|'crop'|'filter'>(null);
   const [showQuitDialog, setShowQuitDialog] = useState(false);
@@ -146,10 +147,11 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
 
   if(step==='guide')return(
     <div className="page">
-      <header className="topbar"><button className="btn-icon" onClick={goBack}>←</button><h1 className="topbar-title">ID Card</h1><button className="btn-icon" onClick={toggleFlash}>{flashOn?'⚡':'🔦'}</button></header>
+      <header className="topbar"><button className="btn-icon" onClick={goBack}>←</button><h1 className="topbar-title">ID Card</h1><button className="btn-icon" onClick={()=>setShowGrid(!showGrid)}>{showGrid?'▦':'▣'}</button><button className="btn-icon" onClick={toggleFlash}>{flashOn?'⚡':'🔦'}</button></header>
       <div className="scan-capture-body">
         <div className="camera-preview">
           <video ref={videoRef} autoPlay playsInline muted className="camera-video"/>
+          {showGrid && <div className="camera-grid"><div className="grid-h" style={{top:'33.3%'}} /><div className="grid-h" style={{top:'66.6%'}} /><div className="grid-v" style={{left:'33.3%'}} /><div className="grid-v" style={{left:'66.6%'}} /></div>}
           <div className="idcard-overlay-card">
             {mode==='id-card'&&<div className="guide-pdf-preview">
               <div className="mock-id-card">
@@ -222,10 +224,11 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
     const isP=mode==='passport';
     return(
       <div className="page">
-        <header className="topbar"><button className="btn-icon" onClick={()=>setStep('guide')}>←</button><h1 className="topbar-title">{mode==='passport'?'Passport':side==='front'?'Front Side':'Back Side'}</h1><button className="btn-icon" onClick={toggleFlash}>{flashOn?'⚡':'🔦'}</button></header>
+        <header className="topbar"><button className="btn-icon" onClick={()=>setStep('guide')}>←</button><h1 className="topbar-title">{mode==='passport'?'Passport':side==='front'?'Front Side':'Back Side'}</h1><button className="btn-icon" onClick={()=>setShowGrid(!showGrid)}>{showGrid?'▦':'▣'}</button><button className="btn-icon" onClick={toggleFlash}>{flashOn?'⚡':'🔦'}</button></header>
         <div className="scan-capture-body">
           <div className="camera-preview">
             <video ref={videoRef} autoPlay playsInline muted className="camera-video"/>
+            {showGrid && <div className="camera-grid"><div className="grid-h" style={{top:'33.3%'}} /><div className="grid-h" style={{top:'66.6%'}} /><div className="grid-v" style={{left:'33.3%'}} /><div className="grid-v" style={{left:'66.6%'}} /></div>}
             {!isP&&<div className="idcard-frame"><div className="viewfinder-corner vf-tl"/><div className="viewfinder-corner vf-tr"/><div className="viewfinder-corner vf-bl"/><div className="viewfinder-corner vf-br"/></div>}
             {isP&&<div className="passport-frame-overlay"><div className="passport-half"><span className="passport-label">Previous Page</span></div><div className="passport-divider"/><div className="passport-half"><span className="passport-label">Next Page</span></div></div>}
           </div>
