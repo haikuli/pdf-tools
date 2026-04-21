@@ -82,6 +82,7 @@ export default function PdfCompress({ onBack }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [level, setLevel] = useState<Level>('small');
   const [progress, setProgress] = useState(0);
+  const [showPreview, setShowPreview] = useState(false);
 
   const currentLevel = LEVELS.find((l) => l.key === level)!;
   const _compressedSize = selectedPdf ? Math.round(selectedPdf.sizeBytes * currentLevel.ratio) : 0;
@@ -176,6 +177,22 @@ export default function PdfCompress({ onBack }: Props) {
     );
   }
 
+  if (showPreview) {
+    return (
+      <div className="page">
+        <header className="topbar">
+          <button className="btn-icon" onClick={() => setShowPreview(false)}>←</button>
+          <h1 className="topbar-title">{selectedPdf?.name}</h1>
+        </header>
+        <div style={{ flex: 1, overflowY: 'auto', background: '#f5f5f5', padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+          <div style={{ width: '85%', aspectRatio: '3/4', borderRadius: 4, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+            <img src="https://picsum.photos/seed/compressview/400/560" alt="Page 1" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page">
       <header className="topbar">
@@ -204,7 +221,7 @@ export default function PdfCompress({ onBack }: Props) {
             <p className="pdf-meta">Documents/MXPlayer/PDF/</p>
             <div className="done-actions">
               <button className="btn-primary btn-lg">Share</button>
-              <button className="btn-secondary btn-lg" onClick={onBack}>Open</button>
+              <button className="btn-secondary btn-lg" onClick={() => setShowPreview(true)}>Open</button>
             </div>
           </>
         )}

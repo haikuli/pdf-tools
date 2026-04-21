@@ -70,6 +70,7 @@ export default function PdfMerge({ onBack }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [files, setFiles] = useState<MergeFile[]>([]);
   const [progress, setProgress] = useState(0);
+  const [showPreview, setShowPreview] = useState(false);
   const [pdfName, setPdfName] = useState('Merged_20241215');
   const [showName, setShowName] = useState(false);
   const dragItem = useRef<number | null>(null);
@@ -216,6 +217,24 @@ export default function PdfMerge({ onBack }: Props) {
     );
   }
 
+  if (showPreview) {
+    return (
+      <div className="page">
+        <header className="topbar">
+          <button className="btn-icon" onClick={() => setShowPreview(false)}>←</button>
+          <h1 className="topbar-title">{pdfName}.pdf</h1>
+        </header>
+        <div style={{ flex: 1, overflowY: 'auto', background: '#f5f5f5', padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+          {[1, 2, 3].map((p) => (
+            <div key={p} style={{ width: '85%', aspectRatio: '3/4', borderRadius: 4, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+              <img src={`https://picsum.photos/seed/mergeview${p}/400/560`} alt={`Page ${p}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page">
       <header className="topbar">
@@ -230,7 +249,7 @@ export default function PdfMerge({ onBack }: Props) {
         <p className="pdf-meta">Documents/</p>
         <div className="done-actions">
           <button className="btn-primary btn-lg">Share</button>
-          <button className="btn-secondary btn-lg">Open</button>
+          <button className="btn-secondary btn-lg" onClick={() => setShowPreview(true)}>Open</button>
         </div>
       </div>
     </div>

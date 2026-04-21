@@ -27,6 +27,7 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
   const adjustWrapRef = useRef<HTMLDivElement>(null);
   const [pdfName, setPdfName] = useState(()=>`IDCard_${new Date().toISOString().slice(0,10).replace(/-/g,'')}`);
   const [progress, setProgress] = useState(0);
+  const [showDonePreview, setShowDonePreview] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream|null>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
@@ -297,11 +298,24 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
     <div className="page center-page"><div className="progress-wrap"><div className="progress-ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" className="ring-bg"/><circle cx="60" cy="60" r="52" className={progress>=100?'ring-done':'ring-fg'} strokeDasharray={`${(progress/100)*327} 327`}/></svg><span className="progress-text">{progress>=100?'✓':`${progress}%`}</span></div><p className="progress-label">{progress>=100?'Done!':'Creating PDF...'}</p></div></div>
   );
 
-  if(step==='done')return(
-    <div className="page"><header className="topbar"><button className="btn-icon" onClick={onBack}>←</button><h1 className="topbar-title">PDF Converted</h1></header>
-      <div className="done-card" style={{flex:1,justifyContent:'center'}}><div className="done-check">✓</div><p className="done-success">Converted successfully!</p><div className="pdf-preview"><img src="https://picsum.photos/seed/idcarddone/140/180" alt="PDF" className="pdf-thumb" /></div><p className="pdf-name">{pdfName}.pdf</p><p className="pdf-meta">Documents/MXPlayer/PDF/</p>
-        <div className="done-actions"><button className="btn-primary btn-lg" onClick={onBack}>Share</button><button className="btn-secondary btn-lg" onClick={onBack}>Open</button></div></div></div>
-  );
+  if(step==='done'){
+    if(showDonePreview){
+      return(
+        <div className="page">
+          <header className="topbar"><button className="btn-icon" onClick={()=>setShowDonePreview(false)}>←</button><h1 className="topbar-title">{pdfName}.pdf</h1></header>
+          <div style={{flex:1,overflowY:'auto',background:'#f5f5f5',padding:16,display:'flex',flexDirection:'column',alignItems:'center',gap:16}}>
+            {frontUrl&&<div style={{width:'85%',aspectRatio:'3/4',borderRadius:4,overflow:'hidden',boxShadow:'0 2px 8px rgba(0,0,0,0.15)',background:'#fff',display:'flex',alignItems:'center',justifyContent:'center'}}><img src={frontUrl} alt="Front" style={{maxWidth:'100%',maxHeight:'100%',objectFit:'contain'}}/></div>}
+            {backUrl&&<div style={{width:'85%',aspectRatio:'3/4',borderRadius:4,overflow:'hidden',boxShadow:'0 2px 8px rgba(0,0,0,0.15)',background:'#fff',display:'flex',alignItems:'center',justifyContent:'center'}}><img src={backUrl} alt="Back" style={{maxWidth:'100%',maxHeight:'100%',objectFit:'contain'}}/></div>}
+          </div>
+        </div>
+      );
+    }
+    return(
+      <div className="page"><header className="topbar"><button className="btn-icon" onClick={onBack}>←</button><h1 className="topbar-title">PDF Converted</h1></header>
+        <div className="done-card" style={{flex:1,justifyContent:'center'}}><div className="done-check">✓</div><p className="done-success">Converted successfully!</p><div className="pdf-preview"><img src="https://picsum.photos/seed/idcarddone/140/180" alt="PDF" className="pdf-thumb" /></div><p className="pdf-name">{pdfName}.pdf</p><p className="pdf-meta">Documents/MXPlayer/PDF/</p>
+          <div className="done-actions"><button className="btn-primary btn-lg" onClick={onBack}>Share</button><button className="btn-secondary btn-lg" onClick={()=>setShowDonePreview(true)}>Open</button></div></div></div>
+    );
+  }
 
   // Adjust - edit with swipe between front/back, rotate, crop, retake
 
