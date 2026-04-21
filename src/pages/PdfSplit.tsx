@@ -134,7 +134,7 @@ export default function PdfSplit({ onBack }: Props) {
               <div className="page-thumb-inner" style={{ overflow: 'hidden' }}>
                 <img src={`https://picsum.photos/seed/split${selectedPdf?.id}p${p}/200/280`} alt={`Page ${p}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
-              {selectedPages.has(p) && <span className="thumb-order">{Array.from(selectedPages).sort((a,b)=>a-b).indexOf(p) + 1}</span>}
+              {selectedPages.has(p) && <span className="thumb-check checked" style={{top:4,right:4,left:'auto',width:20,height:20,borderRadius:'50%',fontSize:11}}>✓</span>}
               <span className="page-thumb-num">{p}</span>
             </div>
           ))}
