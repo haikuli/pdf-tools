@@ -187,9 +187,20 @@ export default function ImageEditor({
           style={{
             filter: filterStyle,
             ...((showPageFrame && previewUrl) ? { position: 'absolute' as const, opacity: 0, pointerEvents: 'none' as const } : {}),
-            ...(!showPageFrame && marginPx > 0 ? { padding: marginPx, background: '#fff', boxShadow: '0 1px 6px rgba(0,0,0,0.15)' } : {}),
+            ...((!showPageFrame && marginPx > 0 && previewUrl && !cropping) ? { position: 'absolute' as const, opacity: 0, pointerEvents: 'none' as const } : {}),
           }}
         />
+
+        {/* Fit mode with margin: wrap canvas in a white frame */}
+        {!showPageFrame && marginPx > 0 && !cropping && (
+          <div className="editor-image-container editor-margin-preview" style={{ padding: marginPx, position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img
+              src={previewUrl || ''}
+              alt=""
+              style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', filter: filterStyle, display: previewUrl ? 'block' : 'none' }}
+            />
+          </div>
+        )}
 
         {/* Page frame preview */}
         {showPageFrame && previewUrl && (
