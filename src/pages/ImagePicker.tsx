@@ -242,6 +242,7 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
               key={img.id}
               data-idx={idx}
               className={`picker-thumb ${order > 0 || guideOrder > 0 ? 'selected' : ''}`}
+              style={guideOrder > 0 ? { zIndex: 201, position: 'relative' } : undefined}
               onClick={() => { if (!swiping) toggleSelect(img.id); }}
             >
               <img src={img.url} alt={img.name} />
