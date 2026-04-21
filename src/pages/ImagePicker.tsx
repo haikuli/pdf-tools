@@ -411,25 +411,14 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
         </div>
       )}
 
-      {/* Swipe multi-select onboarding guide */}
+      {/* Swipe multi-select onboarding guide - overlay on grid */}
       {showGuide && (
-        <div className="dialog-overlay" style={{ zIndex: 200 }} onClick={dismissGuide}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, padding: 32 }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ width: 200, height: 140, background: 'var(--surface)', borderRadius: 16, padding: 16, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, position: 'relative' }}>
-              {[1,2,3,4,5,6].map((n) => (
-                <div key={n} style={{
-                  background: n <= 3 ? 'var(--primary)' : 'var(--surface2)',
-                  borderRadius: 6,
-                  border: n <= 3 ? '2px solid var(--primary)' : '1px solid var(--border)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 10, color: n <= 3 ? '#fff' : 'var(--text2)',
-                }}>{n <= 3 ? '✓' : ''}</div>
-              ))}
-              <div style={{ position: 'absolute', top: 20, left: 30, fontSize: 24, animation: 'guide-hand-swipe 2s ease-in-out infinite' }}>👆</div>
-            </div>
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 80 }} onClick={dismissGuide}>
+          <div style={{ position: 'absolute', top: 160, left: 20, fontSize: 28, animation: 'guide-hand-swipe 2s ease-in-out infinite', pointerEvents: 'none' }}>👆</div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }} onClick={(e) => e.stopPropagation()}>
             <p style={{ color: '#fff', fontSize: 16, fontWeight: 600, textAlign: 'center' }}>Swipe to select multiple</p>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, textAlign: 'center' }}>Long press and drag across images to quickly select or deselect</p>
-            <button className="btn-primary" style={{ padding: '10px 32px' }} onClick={dismissGuide}>Got it</button>
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, textAlign: 'center', padding: '0 32px' }}>Long press and drag across images to quickly select or deselect</p>
+            <button className="btn-primary" style={{ padding: '10px 32px', marginTop: 8 }} onClick={dismissGuide}>Got it</button>
           </div>
         </div>
       )}
