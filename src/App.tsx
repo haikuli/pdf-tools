@@ -258,6 +258,13 @@ export default function App() {
           }}
           onReorder={() => { setReorderSnapshot([...scanImages]); setPage('scan-reorder'); }}
           onScan={() => setPage('scan-capture')}
+          pageSize={pageSize}
+          setPageSize={setPageSize}
+          pageOrientation={pageOrientation}
+          setPageOrientation={setPageOrientation}
+          defaultFillMode={fillMode}
+          defaultMargin={margin}
+          onDefaultsChange={(d) => { if (d.fillMode) setFillMode(d.fillMode); if (d.margin) setMargin(d.margin); }}
         />
       )}
       {page === 'scan-retake' && (
