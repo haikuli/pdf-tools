@@ -80,31 +80,32 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
     try { return !localStorage.getItem('picker_guide_seen'); } catch { return true; }
   });
   const [guideStep, setGuideStep] = useState(0);
+  const [guideHighlight, setGuideHighlight] = useState<Set<number>>(new Set());
   const guideTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const dismissGuide = () => {
     setShowGuide(false);
     setGuideHighlight(new Set());
-    if (guideTimerRef.current) clearInterval(guideTimerRef.current);
+    setGuideStep(0);
+    if (guideTimerRef.current) { clearInterval(guideTimerRef.current); guideTimerRef.current = null; }
     try { localStorage.setItem('picker_guide_seen', '1'); } catch {}
   };
-  const [guideHighlight, setGuideHighlight] = useState<Set<number>>(new Set());
 
-  // Animate guide: sequentially highlight images 0,1,2,3
-  if (showGuide && !guideTimerRef.current) {
+  // Use effect for guide animation
+  useState(() => {
+    if (!showGuide) return;
     let step = 0;
     guideTimerRef.current = setInterval(() => {
       step++;
       if (step <= 4) {
         setGuideHighlight(new Set(Array.from({ length: step }, (_, i) => i)));
         setGuideStep(step);
-      } else if (step === 7) {
-        // Reset cycle
+      } else if (step >= 7) {
         setGuideHighlight(new Set());
         setGuideStep(0);
         step = 0;
       }
-    }, 500);
-  }
+    }, 600);
+  });
 
   const getImageIdFromTouch = (x: number, y: number): string | null => {
     const el = document.elementFromPoint(x, y);
@@ -438,12 +439,13 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
       {/* Swipe multi-select onboarding guide */}
       {showGuide && (
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }} onClick={dismissGuide}>
-          {/* Hand animation on the grid area */}
+          {/* Hand animation - moves across grid cells */}
           <div style={{
-            position: 'absolute', top: 155, left: 24,
+            position: 'absolute', top: 170,
+            left: `calc(${8 + (guideStep > 0 ? (guideStep - 1) : 0) * 33}% + 16px)`,
             fontSize: 28, pointerEvents: 'none', zIndex: 201,
-            transform: `translateX(${guideStep * 30}%)`,
-            transition: 'transform 0.4s ease-out',
+            transition: guideStep > 0 ? 'left 0.4s ease-out' : 'none',
+            opacity: guideStep > 0 ? 1 : 0,
           }}>👆</div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, paddingBottom: 80 }} onClick={(e) => e.stopPropagation()}>
             <p style={{ color: '#fff', fontSize: 16, fontWeight: 600, textAlign: 'center' }}>Swipe to select multiple</p>
