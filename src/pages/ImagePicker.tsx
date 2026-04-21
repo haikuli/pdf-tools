@@ -1,4 +1,4 @@
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useState, useMemo, useEffect } from 'react';
 import type { ImageItem } from '../types';
 import { ImageToPdfIcon, ScanToPdfIcon, IdCardIcon, PdfToImageIcon } from '../components/ToolIcons';
 
@@ -89,10 +89,10 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
   };
 
   // Use effect for guide animation
-  useState(() => {
+  useEffect(() => {
     if (!showGuide) return;
     let step = 0;
-    guideTimerRef.current = setInterval(() => {
+    const timer = setInterval(() => {
       step++;
       if (step <= 4) {
         setGuideHighlight(new Set(Array.from({ length: step }, (_, i) => i)));
@@ -103,7 +103,9 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
         step = 0;
       }
     }, 600);
-  });
+    guideTimerRef.current = timer;
+    return () => clearInterval(timer);
+  }, [showGuide]);
 
   const getImageIdFromTouch = (x: number, y: number): string | null => {
     const el = document.elementFromPoint(x, y);
