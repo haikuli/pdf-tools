@@ -76,9 +76,7 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
   const swipeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Onboarding guide
-  const [showGuide, setShowGuide] = useState(() => {
-    try { return !localStorage.getItem('picker_guide_seen'); } catch { return true; }
-  });
+  const [showGuide, setShowGuide] = useState(true);
   const [guideStep, setGuideStep] = useState(0);
   const [guideHighlight, setGuideHighlight] = useState<Set<number>>(new Set());
   const guideTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
