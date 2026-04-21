@@ -162,9 +162,10 @@ export default function PdfMerge({ onBack }: Props) {
               <span style={{ cursor: 'grab', fontSize: 18, color: 'var(--text2)', flexShrink: 0, padding: '0 4px' }}>☰</span>
             </div>
           ))}
-        </div>
-        <div className="bottom-bar">
-          <button className="btn-secondary" onClick={() => setStep('select')} style={{ flex: 1 }}>+ Add PDF</button>
+          <div className="file-item" style={{ cursor: 'pointer', justifyContent: 'center', border: '1px dashed var(--border)', borderRadius: 8, opacity: 0.7 }} onClick={() => setStep('select')}>
+            <span style={{ fontSize: 22, color: 'var(--primary)', marginRight: 8 }}>+</span>
+            <span style={{ fontSize: 14, color: 'var(--primary)' }}>Add PDF</span>
+          </div>
         </div>
         {showName && (
           <>
