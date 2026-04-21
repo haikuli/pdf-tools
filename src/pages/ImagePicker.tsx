@@ -79,10 +79,32 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
   const [showGuide, setShowGuide] = useState(() => {
     try { return !localStorage.getItem('picker_guide_seen'); } catch { return true; }
   });
+  const [guideStep, setGuideStep] = useState(0);
+  const guideTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const dismissGuide = () => {
     setShowGuide(false);
+    setGuideHighlight(new Set());
+    if (guideTimerRef.current) clearInterval(guideTimerRef.current);
     try { localStorage.setItem('picker_guide_seen', '1'); } catch {}
   };
+  const [guideHighlight, setGuideHighlight] = useState<Set<number>>(new Set());
+
+  // Animate guide: sequentially highlight images 0,1,2,3
+  if (showGuide && !guideTimerRef.current) {
+    let step = 0;
+    guideTimerRef.current = setInterval(() => {
+      step++;
+      if (step <= 4) {
+        setGuideHighlight(new Set(Array.from({ length: step }, (_, i) => i)));
+        setGuideStep(step);
+      } else if (step === 7) {
+        // Reset cycle
+        setGuideHighlight(new Set());
+        setGuideStep(0);
+        step = 0;
+      }
+    }, 500);
+  }
 
   const getImageIdFromTouch = (x: number, y: number): string | null => {
     const el = document.elementFromPoint(x, y);
@@ -213,15 +235,17 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
 
         {displayImages.map((img, idx) => {
           const order = getOrder(img.id);
+          const guideOrder = showGuide && guideHighlight.has(idx) ? idx + 1 : 0;
           return (
             <div
               key={img.id}
               data-idx={idx}
-              className={`picker-thumb ${order > 0 ? 'selected' : ''}`}
+              className={`picker-thumb ${order > 0 || guideOrder > 0 ? 'selected' : ''}`}
               onClick={() => { if (!swiping) toggleSelect(img.id); }}
             >
               <img src={img.url} alt={img.name} />
               <button className="picker-preview-btn" onClick={(e) => { e.stopPropagation(); setPreviewIndex(idx); }}>⤢</button>
+              {guideOrder > 0 && !order && <span className="thumb-order">{guideOrder}</span>}
               {order > 0 && <span className="thumb-order">{order}</span>}
             </div>
           );
@@ -411,51 +435,23 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
         </div>
       )}
 
-      {/* Swipe multi-select onboarding guide - overlay on grid */}
-      {showGuide && (() => {
-        // Get positions of first 4 actual image thumbs (skip camera button)
-        const thumbs = gridRef.current?.querySelectorAll('.picker-thumb') || [];
-        const gridRect = gridRef.current?.getBoundingClientRect();
-        const positions = Array.from(thumbs).slice(0, 4).map((el) => {
-          const r = el.getBoundingClientRect();
-          return gridRect ? { top: r.top - gridRect.top + (gridRef.current?.scrollTop || 0), left: r.left - gridRect.left, width: r.width, height: r.height } : null;
-        }).filter(Boolean) as { top: number; left: number; width: number; height: number }[];
-
-        return (
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', flexDirection: 'column' }} onClick={dismissGuide}>
-            {positions.map((pos, n) => (
-              <div key={n} style={{
-                position: 'absolute',
-                top: pos.top + 148,
-                left: pos.left + 4,
-                width: pos.width,
-                height: pos.height,
-                borderRadius: 8,
-                border: '2px solid transparent',
-                animation: `guide-select-${n} 2.5s ease-in-out infinite`,
-                pointerEvents: 'none',
-                zIndex: 201,
-              }} />
-            ))}
-            {positions.length > 0 && (
-              <div style={{
-                position: 'absolute',
-                top: positions[0].top + 148 + positions[0].height / 2 - 14,
-                left: positions[0].left + 4 + positions[0].width / 2 - 14,
-                fontSize: 28,
-                animation: `guide-hand-swipe-real 2.5s ease-in-out infinite`,
-                pointerEvents: 'none',
-                zIndex: 202,
-              }}>👆</div>
-            )}
-            <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, paddingBottom: 80 }} onClick={(e) => e.stopPropagation()}>
-              <p style={{ color: '#fff', fontSize: 16, fontWeight: 600, textAlign: 'center' }}>Swipe to select multiple</p>
-              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, textAlign: 'center', padding: '0 32px' }}>Long press and drag across images to quickly select or deselect</p>
-              <button className="btn-primary" style={{ padding: '10px 32px', marginTop: 8 }} onClick={dismissGuide}>Got it</button>
-            </div>
+      {/* Swipe multi-select onboarding guide */}
+      {showGuide && (
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }} onClick={dismissGuide}>
+          {/* Hand animation on the grid area */}
+          <div style={{
+            position: 'absolute', top: 155, left: 24,
+            fontSize: 28, pointerEvents: 'none', zIndex: 201,
+            transform: `translateX(${guideStep * 30}%)`,
+            transition: 'transform 0.4s ease-out',
+          }}>👆</div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, paddingBottom: 80 }} onClick={(e) => e.stopPropagation()}>
+            <p style={{ color: '#fff', fontSize: 16, fontWeight: 600, textAlign: 'center' }}>Swipe to select multiple</p>
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, textAlign: 'center', padding: '0 32px' }}>Long press and drag across images to quickly select or deselect</p>
+            <button className="btn-primary" style={{ padding: '10px 32px', marginTop: 8 }} onClick={dismissGuide}>Got it</button>
           </div>
-        );
-      })()}
+        </div>
+      )}
     </div>
   );
 }

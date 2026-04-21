@@ -1481,24 +1481,24 @@ html, body, #root {
 }
 
 @keyframes guide-select-0 {
-  0%, 14% { border-color: transparent; background: transparent; }
-  15%, 90% { border-color: var(--primary); background: rgba(108,92,231,0.25); }
-  91%, 100% { border-color: transparent; background: transparent; }
+  0%, 14% { opacity: 0; transform: scale(0); }
+  15%, 90% { opacity: 1; transform: scale(1); }
+  91%, 100% { opacity: 0; transform: scale(0); }
 }
 @keyframes guide-select-1 {
-  0%, 24% { border-color: transparent; background: transparent; }
-  25%, 90% { border-color: var(--primary); background: rgba(108,92,231,0.25); }
-  91%, 100% { border-color: transparent; background: transparent; }
+  0%, 24% { opacity: 0; transform: scale(0); }
+  25%, 90% { opacity: 1; transform: scale(1); }
+  91%, 100% { opacity: 0; transform: scale(0); }
 }
 @keyframes guide-select-2 {
-  0%, 34% { border-color: transparent; background: transparent; }
-  35%, 90% { border-color: var(--primary); background: rgba(108,92,231,0.25); }
-  91%, 100% { border-color: transparent; background: transparent; }
+  0%, 34% { opacity: 0; transform: scale(0); }
+  35%, 90% { opacity: 1; transform: scale(1); }
+  91%, 100% { opacity: 0; transform: scale(0); }
 }
 @keyframes guide-select-3 {
-  0%, 44% { border-color: transparent; background: transparent; }
-  45%, 90% { border-color: var(--primary); background: rgba(108,92,231,0.25); }
-  91%, 100% { border-color: transparent; background: transparent; }
+  0%, 44% { opacity: 0; transform: scale(0); }
+  45%, 90% { opacity: 1; transform: scale(1); }
+  91%, 100% { opacity: 0; transform: scale(0); }
 }
 
 .drag-guide-text {
