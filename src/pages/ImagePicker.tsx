@@ -444,10 +444,10 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
             position: 'absolute',
             top: gridRef.current ? gridRef.current.offsetTop : 148,
             left: 0, right: 0,
-            padding: 4,
+            padding: 3,
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 4,
+            gap: 3,
           }}>
             {/* Camera placeholder */}
             <div style={{ aspectRatio: '1' }} />
@@ -479,7 +479,7 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
             const gridEl = gridRef.current;
             const gridTop = gridEl ? gridEl.offsetTop : 148;
             const gridWidth = gridEl ? gridEl.clientWidth : 400;
-            const cellW = (gridWidth - 8 - 8) / 3; // padding 4*2, gap 4*2
+            const cellW = (gridWidth - 6 - 6) / 3; // padding 3*2, gap 3*2
             const positions = [
               { col: 1, row: 0 }, { col: 2, row: 0 }, { col: 0, row: 1 }, { col: 1, row: 1 },
             ];
@@ -487,15 +487,15 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
             return (
               <div style={{
                 position: 'absolute',
-                top: gridTop + 4 + pos.row * (cellW + 4) + cellW * 0.55,
-                left: 4 + pos.col * (cellW + 4) + cellW * 0.35,
+                top: gridTop + 3 + pos.row * (cellW + 3) + cellW * 0.55,
+                left: 3 + pos.col * (cellW + 3) + cellW * 0.35,
                 fontSize: 28,
                 transition: 'top 0.35s ease-out, left 0.35s ease-out',
               }}>👆</div>
             );
           })()}
           {/* Text and button - above overlay, no background */}
-          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, paddingBottom: 24, paddingTop: 12, pointerEvents: 'auto', position: 'relative', zIndex: 1 }} onClick={dismissGuide}>
+          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, paddingBottom: 16, paddingTop: 8, pointerEvents: 'auto', position: 'relative', zIndex: 1 }} onClick={dismissGuide}>
             <p style={{ color: '#fff', fontSize: 17, fontWeight: 600, textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>Swipe to select multiple</p>
             <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: 13, textAlign: 'center', padding: '0 32px', textShadow: '0 1px 6px rgba(0,0,0,0.8)' }}>Long press and drag across images to quickly select or deselect</p>
             <button className="btn-primary" style={{ padding: '10px 32px', marginTop: 4 }} onClick={dismissGuide}>Got it</button>
