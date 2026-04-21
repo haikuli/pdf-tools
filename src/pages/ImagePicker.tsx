@@ -57,6 +57,7 @@ export const ALL_MOCK_IMAGES = FOLDER_IMAGES['All Photos'];
 
 export default function ImagePicker({ addImages, onConfirm, loading, onBack, onCamera, autoCrop: autoCropProp, onAutoCropChange }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
   const [folder, setFolder] = useState<FolderName>('All Photos');
   const [selected, setSelected] = useState<string[]>([]);
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
@@ -67,6 +68,73 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
   const [rememberChoice, setRememberChoice] = useState(false);
   const [showSettingsHelp, setShowSettingsHelp] = useState(false);
   const touchStartX = useRef<number>(0);
+
+  // Swipe multi-select
+  const [swiping, setSwiping] = useState(false);
+  const swipeMode = useRef<'select' | 'deselect'>('select');
+  const swipedIds = useRef<Set<string>>(new Set());
+  const swipeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Onboarding guide
+  const [showGuide, setShowGuide] = useState(() => {
+    try { return !localStorage.getItem('picker_guide_seen'); } catch { return true; }
+  });
+  const dismissGuide = () => {
+    setShowGuide(false);
+    try { localStorage.setItem('picker_guide_seen', '1'); } catch {}
+  };
+
+  const getImageIdFromTouch = (x: number, y: number): string | null => {
+    const el = document.elementFromPoint(x, y);
+    if (!el) return null;
+    const thumb = el.closest('.picker-thumb') as HTMLElement | null;
+    if (!thumb) return null;
+    const idx = thumb.dataset.idx;
+    if (idx !== undefined) return displayImages[parseInt(idx)]?.id || null;
+    return null;
+  };
+
+  const handleGridTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    const id = getImageIdFromTouch(touch.clientX, touch.clientY);
+    if (!id) return;
+    // Start a long-press timer for swipe mode
+    swipeTimer.current = setTimeout(() => {
+      setSwiping(true);
+      swipeMode.current = selected.includes(id) ? 'deselect' : 'select';
+      swipedIds.current = new Set([id]);
+      if (swipeMode.current === 'select' && !selected.includes(id)) {
+        setSelected(prev => [...prev, id]);
+      } else if (swipeMode.current === 'deselect' && selected.includes(id)) {
+        setSelected(prev => prev.filter(i => i !== id));
+      }
+    }, 300);
+  };
+
+  const handleGridTouchMove = (e: React.TouchEvent) => {
+    if (swipeTimer.current && !swiping) {
+      clearTimeout(swipeTimer.current);
+      swipeTimer.current = null;
+      return;
+    }
+    if (!swiping) return;
+    const touch = e.touches[0];
+    const id = getImageIdFromTouch(touch.clientX, touch.clientY);
+    if (!id || swipedIds.current.has(id)) return;
+    swipedIds.current.add(id);
+    if (swipeMode.current === 'select' && !selected.includes(id)) {
+      if (selected.length >= MAX_IMAGES) { setShowLimitDialog(true); return; }
+      setSelected(prev => [...prev, id]);
+    } else if (swipeMode.current === 'deselect' && selected.includes(id)) {
+      setSelected(prev => prev.filter(i => i !== id));
+    }
+  };
+
+  const handleGridTouchEnd = () => {
+    if (swipeTimer.current) { clearTimeout(swipeTimer.current); swipeTimer.current = null; }
+    setSwiping(false);
+    swipedIds.current = new Set();
+  };
 
   const displayImages = useMemo(() => FOLDER_IMAGES[folder], [folder]);
 
@@ -135,7 +203,7 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
         <span className="dropdown-arrow">▾</span>
       </div>
 
-      <div className="picker-grid">
+      <div className="picker-grid" ref={gridRef} onTouchStart={handleGridTouchStart} onTouchMove={handleGridTouchMove} onTouchEnd={handleGridTouchEnd}>
         {onCamera && (
           <button className="add-card" onClick={onCamera}>
             <span className="add-icon">📷</span>
@@ -148,8 +216,9 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
           return (
             <div
               key={img.id}
+              data-idx={idx}
               className={`picker-thumb ${order > 0 ? 'selected' : ''}`}
-              onClick={() => toggleSelect(img.id)}
+              onClick={() => { if (!swiping) toggleSelect(img.id); }}
             >
               <img src={img.url} alt={img.name} />
               <button className="picker-preview-btn" onClick={(e) => { e.stopPropagation(); setPreviewIndex(idx); }}>⤢</button>
@@ -338,6 +407,29 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
             <div className="dialog-actions">
               <button className="btn-primary" onClick={() => setShowSettingsHelp(false)}>Got it</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Swipe multi-select onboarding guide */}
+      {showGuide && (
+        <div className="dialog-overlay" style={{ zIndex: 200 }} onClick={dismissGuide}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, padding: 32 }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ width: 200, height: 140, background: 'var(--surface)', borderRadius: 16, padding: 16, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, position: 'relative' }}>
+              {[1,2,3,4,5,6].map((n) => (
+                <div key={n} style={{
+                  background: n <= 3 ? 'var(--primary)' : 'var(--surface2)',
+                  borderRadius: 6,
+                  border: n <= 3 ? '2px solid var(--primary)' : '1px solid var(--border)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 10, color: n <= 3 ? '#fff' : 'var(--text2)',
+                }}>{n <= 3 ? '✓' : ''}</div>
+              ))}
+              <div style={{ position: 'absolute', top: 20, left: 30, fontSize: 24, animation: 'guide-hand-swipe 2s ease-in-out infinite' }}>👆</div>
+            </div>
+            <p style={{ color: '#fff', fontSize: 16, fontWeight: 600, textAlign: 'center' }}>Swipe to select multiple</p>
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, textAlign: 'center' }}>Long press and drag across images to quickly select or deselect</p>
+            <button className="btn-primary" style={{ padding: '10px 32px' }} onClick={dismissGuide}>Got it</button>
           </div>
         </div>
       )}

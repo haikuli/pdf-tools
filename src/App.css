@@ -1465,6 +1465,13 @@ html, body, #root {
   71%, 100% { transform: translate(0, 0); opacity: 0; }
 }
 
+@keyframes guide-hand-swipe {
+  0%, 10% { transform: translate(0, 0); opacity: 1; }
+  50% { transform: translate(100px, 0); opacity: 1; }
+  60% { transform: translate(100px, 0); opacity: 0; }
+  61%, 100% { transform: translate(0, 0); opacity: 0; }
+}
+
 .drag-guide-text {
   color: #fff;
   font-size: 18px;
