@@ -323,7 +323,6 @@ export default function Home({ onNavigate, onBack }: Props) {
                 {file.id === 'f1' && <span className="new-badge">NEW</span>}
               </span>
               <span className="file-meta">{file.size} · {file.date}</span>
-              <span className="file-meta">{file.path}</span>
             </div>
             <button className="file-more" onClick={(e) => { e.stopPropagation(); setMenuFile(menuFile === file.id ? null : file.id); }}>⋮</button>
 
