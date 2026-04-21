@@ -153,14 +153,13 @@ export default function PdfMerge({ onBack }: Props) {
               onDragEnd={handleDragEnd}
               onDragOver={(e) => e.preventDefault()}
             >
-              <span className="card-index" style={{ position: 'static', background: 'var(--primary)', marginRight: 8 }}>{idx + 1}</span>
+              <button className="btn-icon" style={{ width: 24, height: 24, borderRadius: '50%', background: '#e74c3c', color: '#fff', fontSize: 16, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, border: 'none', flexShrink: 0 }} onClick={() => setFiles((prev) => prev.filter((x) => x.id !== f.id))}>−</button>
               <PdfThumb type={f.thumbType} />
               <div className="file-info">
                 <span className="file-name">{f.name}</span>
                 <span className="file-meta">{f.size}</span>
               </div>
-              <button className="btn-icon" style={{ fontSize: 14, padding: '4px', color: 'var(--text2)' }} onClick={() => setFiles((prev) => prev.filter((x) => x.id !== f.id))}>✕</button>
-              <span className="btn-icon" style={{ cursor: 'grab', fontSize: 18, color: 'var(--text2)' }}>☰</span>
+              <span style={{ cursor: 'grab', fontSize: 18, color: 'var(--text2)', flexShrink: 0, padding: '0 4px' }}>☰</span>
             </div>
           ))}
         </div>
