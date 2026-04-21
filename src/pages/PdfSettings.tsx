@@ -17,6 +17,8 @@ export default function PdfSettings({ onBack }: Props) {
       </header>
 
       <div className="settings-page-list">
+        <div className="settings-section-label">Image to PDF</div>
+
         <div className="settings-page-item">
           <span className="settings-item-label">Auto Crop</span>
           <select className="settings-select" value={autoCropMode} onChange={(e) => setAutoCropMode(e.target.value)}>
@@ -25,6 +27,8 @@ export default function PdfSettings({ onBack }: Props) {
             <option value="off">Always off</option>
           </select>
         </div>
+
+        <div className="settings-section-label">PDF Output</div>
 
         <div className="settings-page-item">
           <span className="settings-item-label">Default Page Size</span>
