@@ -163,6 +163,9 @@ export default function PdfMerge({ onBack }: Props) {
             </div>
           ))}
         </div>
+        <div className="bottom-bar">
+          <button className="btn-secondary" onClick={() => setStep('select')} style={{ flex: 1 }}>+ Add PDF</button>
+        </div>
         {showName && (
           <>
             <div className="sheet-backdrop" onClick={() => setShowName(false)} />
