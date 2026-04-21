@@ -1472,6 +1472,27 @@ html, body, #root {
   61%, 100% { transform: translate(0, 0); opacity: 0; }
 }
 
+@keyframes guide-select-0 {
+  0%, 14% { border-color: transparent; background: transparent; }
+  15%, 90% { border-color: var(--primary); background: rgba(108,92,231,0.25); }
+  91%, 100% { border-color: transparent; background: transparent; }
+}
+@keyframes guide-select-1 {
+  0%, 24% { border-color: transparent; background: transparent; }
+  25%, 90% { border-color: var(--primary); background: rgba(108,92,231,0.25); }
+  91%, 100% { border-color: transparent; background: transparent; }
+}
+@keyframes guide-select-2 {
+  0%, 34% { border-color: transparent; background: transparent; }
+  35%, 90% { border-color: var(--primary); background: rgba(108,92,231,0.25); }
+  91%, 100% { border-color: transparent; background: transparent; }
+}
+@keyframes guide-select-3 {
+  0%, 44% { border-color: transparent; background: transparent; }
+  45%, 90% { border-color: var(--primary); background: rgba(108,92,231,0.25); }
+  91%, 100% { border-color: transparent; background: transparent; }
+}
+
 .drag-guide-text {
   color: #fff;
   font-size: 18px;
