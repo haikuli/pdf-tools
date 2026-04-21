@@ -110,12 +110,20 @@ export default function PdfMerge({ onBack }: Props) {
 
   if (step === 'select') {
     const filtered = MOCK.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    const allSelected = filtered.length > 0 && filtered.every(f => selected.has(f.id));
+    const toggleAll = () => {
+      if (allSelected) setSelected(new Set());
+      else setSelected(new Set(filtered.map(f => f.id)));
+    };
     return (
       <div className="page">
         <header className="topbar">
           <button className="btn-icon" onClick={onBack}>←</button>
           <h1 className="topbar-title">Merge PDF</h1>
-          <button className="btn-primary" disabled={selected.size < 2} onClick={confirmSelect}>Next ({selected.size})</button>
+          <label className="select-all" onClick={toggleAll}>
+            <span className={`checkbox ${allSelected ? 'checked' : ''}`}>{allSelected ? '✓' : ''}</span>
+            <span>All</span>
+          </label>
         </header>
         <div style={{ padding: '8px 16px', flexShrink: 0 }}>
           <input className="name-input" style={{ marginBottom: 0, padding: '8px 12px', fontSize: 13 }} placeholder="Search files..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
@@ -131,6 +139,11 @@ export default function PdfMerge({ onBack }: Props) {
               </div>
             </div>
           ))}
+        </div>
+        <div className="bottom-bar" style={{ flexDirection: 'column', gap: 8 }}>
+          <button className="btn-primary btn-confirm-full" disabled={selected.size < 2} onClick={confirmSelect}>
+            Next ({selected.size})
+          </button>
         </div>
       </div>
     );
