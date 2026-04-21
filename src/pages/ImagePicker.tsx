@@ -436,7 +436,7 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
 
       {/* Swipe multi-select onboarding guide */}
       {showGuide && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column' }} onClick={dismissGuide}>
           {/* Dark overlay */}
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }} />
           {/* Replicated grid overlay - matches picker-grid exactly */}
@@ -495,7 +495,7 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
             );
           })()}
           {/* Text and button */}
-          <div style={{ position: 'absolute', bottom: 80, left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, pointerEvents: 'auto', zIndex: 1 }} onClick={dismissGuide}>
+          <div style={{ position: 'absolute', bottom: 80, left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, zIndex: 1 }}>
             <p style={{ color: '#fff', fontSize: 17, fontWeight: 600, textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>Swipe to select multiple</p>
             <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: 13, textAlign: 'center', padding: '0 32px', textShadow: '0 1px 6px rgba(0,0,0,0.8)' }}>Long press and drag across images to quickly select or deselect</p>
             <button className="btn-primary" style={{ padding: '10px 32px', marginTop: 4 }} onClick={dismissGuide}>Got it</button>
