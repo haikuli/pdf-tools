@@ -167,11 +167,11 @@ export default function PdfCompress({ onBack }: Props) {
           <div className="progress-ring">
             <svg viewBox="0 0 120 120">
               <circle cx="60" cy="60" r="52" className="ring-bg" />
-              <circle cx="60" cy="60" r="52" className="ring-fg" strokeDasharray={`${(progress / 100) * 327} 327`} />
+              <circle cx="60" cy="60" r="52" className={progress >= 100 ? 'ring-done' : 'ring-fg'} strokeDasharray={`${(progress / 100) * 327} 327`} />
             </svg>
-            <span className="progress-text">{progress}%</span>
+            <span className="progress-text">{progress >= 100 ? '✓' : `${progress}%`}</span>
           </div>
-          <p className="progress-label">Compressing...</p>
+          <p className="progress-label">{progress >= 100 ? 'Done!' : 'Compressing...'}</p>
         </div>
       </div>
     );
@@ -220,7 +220,7 @@ export default function PdfCompress({ onBack }: Props) {
             <p className="pdf-name">{selectedPdf?.name.replace('.pdf', '')}_compressed.pdf</p>
             <p className="pdf-meta">Documents/MXPlayer/PDF/</p>
             <div className="done-actions">
-              <button className="btn-primary btn-lg">Share</button>
+              <button className="btn-primary btn-lg" onClick={onBack}>Share</button>
               <button className="btn-secondary btn-lg" onClick={() => setShowPreview(true)}>Open</button>
             </div>
           </>
