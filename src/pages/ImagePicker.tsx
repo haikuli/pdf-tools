@@ -439,18 +439,36 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
         <div style={{ position: 'absolute', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', pointerEvents: 'none' }}>
           {/* Dark overlay */}
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
-          {/* Replicated image grid with highlights inside overlay */}
-          <div style={{ position: 'relative', marginTop: gridRef.current ? gridRef.current.getBoundingClientRect().top - (gridRef.current.closest('.page')?.getBoundingClientRect().top || 0) : 148, padding: 4, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4 }}>
-            {/* Camera placeholder - empty */}
+          {/* Replicated grid overlay - matches picker-grid exactly */}
+          <div style={{
+            position: 'absolute',
+            top: gridRef.current ? gridRef.current.offsetTop : 148,
+            left: 0, right: 0,
+            padding: 4,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 4,
+          }}>
+            {/* Camera placeholder */}
             <div style={{ aspectRatio: '1' }} />
-            {/* First 5 images - show highlights on first 4 */}
+            {/* First 5 images */}
             {displayImages.slice(0, 5).map((img, idx) => {
               const highlighted = guideHighlight.has(idx);
               return (
-                <div key={img.id} style={{ aspectRatio: '1', position: 'relative', borderRadius: 8, overflow: 'hidden', border: highlighted ? '2px solid var(--primary)' : '2px solid transparent' }}>
-                  <img src={img.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: highlighted ? 1 : 0 }} />
+                <div key={img.id} style={{
+                  position: 'relative',
+                  width: '100%',
+                  paddingBottom: '100%',
+                  borderRadius: 8,
+                  overflow: 'hidden',
+                  border: highlighted ? '2px solid var(--primary)' : '2px solid transparent',
+                  boxSizing: 'border-box',
+                }}>
                   {highlighted && (
-                    <span style={{ position: 'absolute', top: 4, right: 4, background: 'var(--primary)', color: '#fff', width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{idx + 1}</span>
+                    <>
+                      <img src={img.url} alt="" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <span style={{ position: 'absolute', top: 4, right: 4, background: 'var(--primary)', color: '#fff', width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{idx + 1}</span>
+                    </>
                   )}
                 </div>
               );
@@ -459,10 +477,9 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
           {/* Hand emoji */}
           {guideStep > 0 && (() => {
             const gridEl = gridRef.current;
-            const pageEl = gridEl?.closest('.page');
-            const gridTop = gridEl && pageEl ? gridEl.getBoundingClientRect().top - pageEl.getBoundingClientRect().top : 148;
+            const gridTop = gridEl ? gridEl.offsetTop : 148;
             const gridWidth = gridEl ? gridEl.clientWidth : 400;
-            const cellW = (gridWidth - 4 * 2 - 4 * 2) / 3;
+            const cellW = (gridWidth - 8 - 8) / 3; // padding 4*2, gap 4*2
             const positions = [
               { col: 1, row: 0 }, { col: 2, row: 0 }, { col: 0, row: 1 }, { col: 1, row: 1 },
             ];
@@ -470,18 +487,18 @@ export default function ImagePicker({ addImages, onConfirm, loading, onBack, onC
             return (
               <div style={{
                 position: 'absolute',
-                top: gridTop + 4 + pos.row * (cellW + 4) + cellW * 0.6,
-                left: 4 + pos.col * (cellW + 4) + cellW * 0.3,
+                top: gridTop + 4 + pos.row * (cellW + 4) + cellW * 0.55,
+                left: 4 + pos.col * (cellW + 4) + cellW * 0.35,
                 fontSize: 28,
-                transition: 'top 0.4s ease-out, left 0.4s ease-out',
+                transition: 'top 0.35s ease-out, left 0.35s ease-out',
               }}>👆</div>
             );
           })()}
           {/* Text and button */}
-          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, paddingBottom: 80, background: 'linear-gradient(transparent, rgba(0,0,0,0.85) 30%)', paddingTop: 40, pointerEvents: 'auto' }} onClick={dismissGuide}>
-            <p style={{ color: '#fff', fontSize: 16, fontWeight: 600, textAlign: 'center' }}>Swipe to select multiple</p>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, textAlign: 'center', padding: '0 32px' }}>Long press and drag across images to quickly select or deselect</p>
-            <button className="btn-primary" style={{ padding: '10px 32px', marginTop: 8 }} onClick={dismissGuide}>Got it</button>
+          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, paddingBottom: 60, paddingTop: 24, pointerEvents: 'auto' }} onClick={dismissGuide}>
+            <p style={{ color: '#fff', fontSize: 17, fontWeight: 600, textAlign: 'center' }}>Swipe to select multiple</p>
+            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, textAlign: 'center', padding: '0 32px' }}>Long press and drag across images to quickly select or deselect</p>
+            <button className="btn-primary" style={{ padding: '10px 32px', marginTop: 4 }} onClick={dismissGuide}>Got it</button>
           </div>
         </div>
       )}

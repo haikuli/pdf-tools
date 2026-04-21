@@ -232,7 +232,6 @@ html, body, #root {
   font-size: 12px;
   cursor: pointer;
   transition: border-color 0.2s;
-  max-height: 160px;
 }
 .add-card:hover { border-color: var(--primary); }
 .add-icon { font-size: 24px; }
