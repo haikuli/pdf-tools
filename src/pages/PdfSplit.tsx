@@ -172,6 +172,25 @@ export default function PdfSplit({ onBack }: Props) {
 
   // Done
   const fileName = getFileName();
+
+  if (showPreview) {
+    return (
+      <div className="page">
+        <header className="topbar">
+          <button className="btn-icon" onClick={() => setShowPreview(false)}>←</button>
+          <h1 className="topbar-title">{fileName}</h1>
+        </header>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5', gap: 16, padding: 24 }}>
+          {Array.from(selectedPages).sort((a, b) => a - b).map((p) => (
+            <div key={p} style={{ width: '80%', aspectRatio: '3/4', borderRadius: 4, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+              <img src={`https://picsum.photos/seed/view${p}/400/560`} alt={`Page ${p}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page">
       <header className="topbar">
@@ -189,17 +208,6 @@ export default function PdfSplit({ onBack }: Props) {
           <button className="btn-secondary btn-lg" onClick={() => setShowPreview(true)}>Open</button>
         </div>
       </div>
-      {showPreview && (
-        <div className="dialog-overlay" style={{ zIndex: 150 }}>
-          <div className="dialog" style={{ maxWidth: 380 }}>
-            <h2>{fileName}</h2>
-            <p style={{ fontSize: 13, color: 'var(--text2)' }}>{selectedPages.size} pages extracted</p>
-            <div className="dialog-actions" style={{ marginTop: 16 }}>
-              <button className="btn-primary" onClick={() => { setShowPreview(false); onBack(); }}>Done</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
