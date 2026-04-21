@@ -17,7 +17,7 @@ export default function PdfSettings({ onBack }: Props) {
       </header>
 
       <div className="settings-page-list">
-        <div className="settings-section-label">Image to PDF</div>
+        <div className="settings-section-label">Import</div>
 
         <div className="settings-page-item">
           <span className="settings-item-label">Auto Crop</span>
