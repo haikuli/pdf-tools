@@ -6,12 +6,12 @@ interface Props {
 
 type Step = 'select' | 'order' | 'progress' | 'done';
 
-interface MergeFile { id: string; name: string; size: string; }
+interface MergeFile { id: string; name: string; size: string; date: string; }
 
-const MOCK = [
-  { id: 'm1', name: 'Report_Q1.pdf', size: '1.2 MB' },
-  { id: 'm2', name: 'Report_Q2.pdf', size: '980 KB' },
-  { id: 'm3', name: 'Summary.pdf', size: '340 KB' },
+const MOCK: MergeFile[] = [
+  { id: 'm1', name: 'Report_Q1.pdf', size: '1.2 MB', date: 'Mar 12, 2026' },
+  { id: 'm2', name: 'Report_Q2.pdf', size: '980 KB', date: 'Feb 20, 2026' },
+  { id: 'm3', name: 'Summary.pdf', size: '340 KB', date: 'Jan 15, 2026' },
 ];
 
 export default function PdfMerge({ onBack }: Props) {
@@ -77,7 +77,7 @@ export default function PdfMerge({ onBack }: Props) {
               <div className="file-thumb">📄</div>
               <div className="file-info">
                 <span className="file-name">{f.name}</span>
-                <span className="file-meta">{f.size}</span>
+                <span className="file-meta">{f.size} · {f.date}</span>
               </div>
             </div>
           ))}

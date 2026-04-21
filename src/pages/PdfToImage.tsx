@@ -8,17 +8,17 @@ interface Props {
 type Step = 'select-pdf' | 'pages' | 'converting' | 'done' | 'viewer' | 'image-preview';
 type OutputFormat = 'JPEG' | 'PNG';
 
-interface PdfFile { id: string; name: string; size: string; thumbType: 'invoice' | 'contract' | 'presentation' | 'document' | 'resume'; }
+interface PdfFile { id: string; name: string; size: string; date: string; thumbType: 'invoice' | 'contract' | 'presentation' | 'document' | 'resume'; }
 
 const MOCK_PDFS: PdfFile[] = [
-  { id: 'p1', name: 'Invoice_2026.pdf', size: '2.3 MB', thumbType: 'invoice' },
-  { id: 'p2', name: 'Contract_signed.pdf', size: '856 KB', thumbType: 'contract' },
-  { id: 'p3', name: 'Presentation.pdf', size: '5.1 MB', thumbType: 'presentation' },
-  { id: 'p4', name: 'Tax_Report_2025.pdf', size: '1.2 MB', thumbType: 'document' },
-  { id: 'p5', name: 'Meeting_Notes.pdf', size: '340 KB', thumbType: 'document' },
-  { id: 'p6', name: 'User_Manual.pdf', size: '8.7 MB', thumbType: 'document' },
-  { id: 'p7', name: 'Receipt_Amazon.pdf', size: '120 KB', thumbType: 'invoice' },
-  { id: 'p8', name: 'Project_Plan_Q1.pdf', size: '3.4 MB', thumbType: 'resume' },
+  { id: 'p1', name: 'Invoice_2026.pdf', size: '2.3 MB', date: 'Mar 15, 2026', thumbType: 'invoice' },
+  { id: 'p2', name: 'Contract_signed.pdf', size: '856 KB', date: 'Mar 10, 2026', thumbType: 'contract' },
+  { id: 'p3', name: 'Presentation.pdf', size: '5.1 MB', date: 'Feb 28, 2026', thumbType: 'presentation' },
+  { id: 'p4', name: 'Tax_Report_2025.pdf', size: '1.2 MB', date: 'Feb 14, 2026', thumbType: 'document' },
+  { id: 'p5', name: 'Meeting_Notes.pdf', size: '340 KB', date: 'Jan 22, 2026', thumbType: 'document' },
+  { id: 'p6', name: 'User_Manual.pdf', size: '8.7 MB', date: 'Jan 5, 2026', thumbType: 'document' },
+  { id: 'p7', name: 'Receipt_Amazon.pdf', size: '120 KB', date: 'Dec 20, 2025', thumbType: 'invoice' },
+  { id: 'p8', name: 'Project_Plan_Q1.pdf', size: '3.4 MB', date: 'Dec 1, 2025', thumbType: 'resume' },
 ];
 
 function PdfThumb({ type }: { type: string }) {
@@ -113,7 +113,7 @@ export default function PdfToImage({ onBack, mode }: Props) {
               <PdfThumb type={f.thumbType} />
               <div className="file-info">
                 <span className="file-name">{f.name}</span>
-                <span className="file-meta">{f.size}</span>
+                <span className="file-meta">{f.size} · {f.date}</span>
               </div>
             </div>
           ))}

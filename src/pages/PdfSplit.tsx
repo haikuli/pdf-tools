@@ -6,15 +6,15 @@ interface Props {
 
 type Step = 'select-pdf' | 'select-pages' | 'progress' | 'done';
 
-interface PdfFile { id: string; name: string; size: string; pages: number; thumbType: string; }
+interface PdfFile { id: string; name: string; size: string; pages: number; thumbType: string; date: string; }
 
 const MOCK_PDFS: PdfFile[] = [
-  { id: 'p1', name: 'Invoice_2026.pdf', size: '2.3 MB', pages: 12, thumbType: 'invoice' },
-  { id: 'p2', name: 'Contract_signed.pdf', size: '856 KB', pages: 8, thumbType: 'contract' },
-  { id: 'p3', name: 'Presentation.pdf', size: '5.1 MB', pages: 24, thumbType: 'presentation' },
-  { id: 'p4', name: 'Tax_Report_2025.pdf', size: '1.2 MB', pages: 6, thumbType: 'document' },
-  { id: 'p5', name: 'Meeting_Notes.pdf', size: '340 KB', pages: 4, thumbType: 'document' },
-  { id: 'p6', name: 'User_Manual.pdf', size: '8.7 MB', pages: 48, thumbType: 'document' },
+  { id: 'p1', name: 'Invoice_2026.pdf', size: '2.3 MB', pages: 12, thumbType: 'invoice', date: 'Mar 15, 2026' },
+  { id: 'p2', name: 'Contract_signed.pdf', size: '856 KB', pages: 8, thumbType: 'contract', date: 'Mar 10, 2026' },
+  { id: 'p3', name: 'Presentation.pdf', size: '5.1 MB', pages: 24, thumbType: 'presentation', date: 'Feb 28, 2026' },
+  { id: 'p4', name: 'Tax_Report_2025.pdf', size: '1.2 MB', pages: 6, thumbType: 'document', date: 'Feb 14, 2026' },
+  { id: 'p5', name: 'Meeting_Notes.pdf', size: '340 KB', pages: 4, thumbType: 'document', date: 'Jan 22, 2026' },
+  { id: 'p6', name: 'User_Manual.pdf', size: '8.7 MB', pages: 48, thumbType: 'document', date: 'Jan 5, 2026' },
 ];
 
 function PdfThumb({ type }: { type: string }) {
@@ -110,7 +110,7 @@ export default function PdfSplit({ onBack }: Props) {
               <PdfThumb type={f.thumbType} />
               <div className="file-info">
                 <span className="file-name">{f.name}</span>
-                <span className="file-meta">{f.size} · {f.pages} pages</span>
+                <span className="file-meta">{f.size} · {f.pages} pages · {f.date}</span>
               </div>
             </div>
           ))}

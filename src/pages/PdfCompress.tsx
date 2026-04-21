@@ -7,17 +7,17 @@ interface Props {
 type Step = 'select-pdf' | 'level' | 'progress' | 'done';
 type Level = 'small' | 'medium' | 'large';
 
-interface PdfFile { id: string; name: string; size: string; sizeBytes: number; thumbType: string; }
+interface PdfFile { id: string; name: string; size: string; sizeBytes: number; thumbType: string; date: string; }
 
 const MOCK_PDFS: PdfFile[] = [
-  { id: 'p1', name: 'Invoice_2026.pdf', size: '2.3 MB', sizeBytes: 2300000, thumbType: 'invoice' },
-  { id: 'p2', name: 'Contract_signed.pdf', size: '856 KB', sizeBytes: 856000, thumbType: 'contract' },
-  { id: 'p3', name: 'Presentation.pdf', size: '5.1 MB', sizeBytes: 5100000, thumbType: 'presentation' },
-  { id: 'p4', name: 'Tax_Report_2025.pdf', size: '1.2 MB', sizeBytes: 1200000, thumbType: 'document' },
-  { id: 'p5', name: 'Meeting_Notes.pdf', size: '340 KB', sizeBytes: 340000, thumbType: 'document' },
-  { id: 'p6', name: 'User_Manual.pdf', size: '8.7 MB', sizeBytes: 8700000, thumbType: 'document' },
-  { id: 'p7', name: 'Receipt_Amazon.pdf', size: '120 KB', sizeBytes: 120000, thumbType: 'invoice' },
-  { id: 'p8', name: 'Project_Plan_Q1.pdf', size: '3.4 MB', sizeBytes: 3400000, thumbType: 'resume' },
+  { id: 'p1', name: 'Invoice_2026.pdf', size: '2.3 MB', sizeBytes: 2300000, thumbType: 'invoice', date: 'Mar 15, 2026' },
+  { id: 'p2', name: 'Contract_signed.pdf', size: '856 KB', sizeBytes: 856000, thumbType: 'contract', date: 'Mar 10, 2026' },
+  { id: 'p3', name: 'Presentation.pdf', size: '5.1 MB', sizeBytes: 5100000, thumbType: 'presentation', date: 'Feb 28, 2026' },
+  { id: 'p4', name: 'Tax_Report_2025.pdf', size: '1.2 MB', sizeBytes: 1200000, thumbType: 'document', date: 'Feb 14, 2026' },
+  { id: 'p5', name: 'Meeting_Notes.pdf', size: '340 KB', sizeBytes: 340000, thumbType: 'document', date: 'Jan 22, 2026' },
+  { id: 'p6', name: 'User_Manual.pdf', size: '8.7 MB', sizeBytes: 8700000, thumbType: 'document', date: 'Jan 5, 2026' },
+  { id: 'p7', name: 'Receipt_Amazon.pdf', size: '120 KB', sizeBytes: 120000, thumbType: 'invoice', date: 'Dec 20, 2025' },
+  { id: 'p8', name: 'Project_Plan_Q1.pdf', size: '3.4 MB', sizeBytes: 3400000, thumbType: 'resume', date: 'Dec 1, 2025' },
 ];
 
 function PdfThumb({ type }: { type: string }) {
@@ -124,7 +124,7 @@ export default function PdfCompress({ onBack }: Props) {
               <PdfThumb type={f.thumbType} />
               <div className="file-info">
                 <span className="file-name">{f.name}</span>
-                <span className="file-meta">{f.size}</span>
+                <span className="file-meta">{f.size} · {f.date}</span>
               </div>
             </div>
           ))}
