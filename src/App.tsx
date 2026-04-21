@@ -154,6 +154,7 @@ export default function App() {
     }));
     setScanImages((prev) => [...prev, ...items]);
     setScanIndex(0);
+    if (scanImages.length === 0) { setPageSize('Auto'); setFillMode('fit'); setMargin('None'); }
     setPage('scan-crop');
   };
 
