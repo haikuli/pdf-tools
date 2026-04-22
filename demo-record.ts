@@ -148,7 +148,7 @@ async function main() {
   // FIX 2 & 6: Filter — only apply to current image, don't apply to all
   await tap(page, '.bar-btn:has-text("Filter")');
   await page.waitForTimeout(PAUSE);
-  await tap(page, '.filter-sheet-option:has-text("Grayscale")');
+  await tap(page, '.filter-sheet-option:has-text("Color+")');
   await page.waitForTimeout(PAUSE);
   await tap(page, '.bar-btn:has-text("Filter")');
   await page.waitForTimeout(SHORT);
@@ -224,7 +224,7 @@ async function main() {
   await tap(page, '.bar-btn:has-text("Page Size")');
   await page.waitForTimeout(PAUSE);
   // Scroll page size options to find Letter
-  await tap(page, '.filter-sheet-option:has-text("Letter")');
+  await tap(page, '.filter-sheet-option:has-text("A4") >> nth=1');
   await page.waitForTimeout(PAUSE);
   await tap(page, '.bar-btn:has-text("Page Size")');
   await page.waitForTimeout(SHORT);
