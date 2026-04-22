@@ -218,13 +218,14 @@ async function main() {
   await tap(page, '.bottom-sheet .btn-confirm-full');
   await page.waitForTimeout(PAUSE);
 
-  // FIX 5: Page Size — scroll bar, click Letter Portrait
+  // 7. Page Size — A4 Portrait then Letter Portrait
   await page.locator('.editor-bar').evaluate(el => el.scrollLeft = el.scrollWidth);
   await page.waitForTimeout(SHORT);
   await tap(page, '.bar-btn:has-text("Page Size")');
   await page.waitForTimeout(PAUSE);
-  // Scroll page size options to find Letter
-  await tap(page, '.filter-sheet-option:has-text("A4") >> nth=1');
+  await tap(page, '.filter-sheet-option:has-text("A4")');
+  await page.waitForTimeout(PAUSE);
+  await tap(page, '.filter-sheet-option:has-text("Letter")');
   await page.waitForTimeout(PAUSE);
   await tap(page, '.bar-btn:has-text("Page Size")');
   await page.waitForTimeout(SHORT);
@@ -255,6 +256,15 @@ async function main() {
   await tap(page, '.bottom-sheet .btn-primary:has-text("Convert")');
   await page.waitForTimeout(LONG);
   await page.waitForTimeout(LONG);
+  await page.waitForTimeout(LONG);
+
+  // Open the generated PDF and scroll
+  await tap(page, 'text=Open');
+  await page.waitForTimeout(PAUSE);
+  // Scroll the PDF preview
+  const pdfPreview = page.locator('.pdf-iframe, embed');
+  await pdfPreview.evaluate((el: HTMLElement) => el.scrollTo?.({ top: 300, behavior: 'smooth' })).catch(() => {});
+  await page.waitForTimeout(PAUSE);
   await page.waitForTimeout(LONG);
 
   // Save

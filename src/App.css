@@ -238,7 +238,8 @@ html, body, #root {
   box-sizing: border-box;
   min-width: 0;
 }
-.bottom-sheet .add-card {
+.bottom-sheet .add-card,
+.editor-sheet .add-card {
   height: auto;
   padding-bottom: 0;
   padding: 20px 12px;
@@ -251,7 +252,9 @@ html, body, #root {
   overflow: visible;
 }
 .bottom-sheet .add-card .add-icon,
-.bottom-sheet .add-card span {
+.bottom-sheet .add-card span,
+.editor-sheet .add-card .add-icon,
+.editor-sheet .add-card span {
   position: static;
 }
 .add-card .add-icon, .add-card span {
