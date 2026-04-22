@@ -7,6 +7,16 @@ const filterToCSS = (f?: string) =>
   f === 'bw' ? 'grayscale(1) contrast(3) brightness(1.3)' :
   f === 'color' ? 'contrast(1.2) saturate(1.5) brightness(1.05)' : 'none';
 
+// When rotated 90/270, image width/height swap. Scale down to fit container.
+const getRotationStyle = (rotation?: number) => {
+  if (!rotation) return {};
+  const r = rotation % 360;
+  if (r === 90 || r === 270) {
+    return { transform: `rotate(${r}deg) scale(0.75)` };
+  }
+  return { transform: `rotate(${r}deg)` };
+};
+
 interface Props {
   images: ImageItem[];
   addImages: (files: File[]) => void;
@@ -64,7 +74,7 @@ export default function PreviewGrid({
           {images.map((img, idx) => (
             <div key={img.id} className={`preview-card ${hasPageFrame ? 'preview-card-paged' : ''}`} style={hasPageFrame ? { aspectRatio: `${pAspect}`, background: '#fff' } : undefined}>
               <img src={img.url} alt={img.name} style={{
-                ...(img.rotation ? {transform: `rotate(${img.rotation}deg)`} : {}),
+                ...getRotationStyle(img.rotation),
                 ...(hasPageFrame ? { objectFit: 'contain' as const, width: '100%', height: '100%' } : {}),
                 filter: filterToCSS(img.filter),
               }} />
@@ -87,7 +97,7 @@ export default function PreviewGrid({
             <div key={img.id} className="preview-list-item" style={hasPageFrame ? { aspectRatio: `${pAspect}` } : undefined}>
               <div className={`preview-list-img-wrap ${hasPageFrame ? 'preview-list-paged' : ''}`} style={hasPageFrame ? { background: '#fff' } : undefined}>
                 <img src={img.url} alt={img.name} style={{
-                  ...(img.rotation ? {transform: `rotate(${img.rotation}deg)`} : {}),
+                  ...getRotationStyle(img.rotation),
                   ...(hasPageFrame ? { objectFit: 'contain' as const } : {}),
                   filter: filterToCSS(img.filter),
                 }} />

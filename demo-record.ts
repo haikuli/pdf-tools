@@ -19,7 +19,7 @@ async function tap(page: Page, selector: string, timeout = 5000) {
 }
 
 async function main() {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: false });
   const context = await browser.newContext({
     viewport: { width: 430, height: 932 },
     deviceScaleFactor: 1,
@@ -202,7 +202,7 @@ async function main() {
   await page.waitForTimeout(SHORT);
   await tap(page, '.bar-btn:has-text("Add")');
   await page.waitForTimeout(LONG); // show the bottom sheet fully
-  await tap(page, '.add-card:has-text("Album")');
+  await tap(page, '.editor-sheet button:has-text("Album")');
   await page.waitForTimeout(PAUSE);
   const newThumb = page.locator('.picker-thumb').nth(6);
   const ntBox = await newThumb.boundingBox().catch(() => null);
@@ -218,24 +218,12 @@ async function main() {
   await tap(page, '.bottom-sheet .btn-confirm-full');
   await page.waitForTimeout(PAUSE);
 
-  // 7. Page Size — A4 Portrait then Letter Portrait
-  await page.locator('.editor-bar').evaluate(el => el.scrollLeft = el.scrollWidth);
-  await page.waitForTimeout(SHORT);
+  // 7. Page Size
   await tap(page, '.bar-btn:has-text("Page Size")');
   await page.waitForTimeout(PAUSE);
-  await tap(page, '.filter-sheet-option:has-text("A4")');
-  await page.waitForTimeout(PAUSE);
-  await tap(page, '.filter-sheet-option:has-text("Letter")');
+  // Show A4 is selected (default), just display the sheet
   await page.waitForTimeout(PAUSE);
   await tap(page, '.bar-btn:has-text("Page Size")');
-  await page.waitForTimeout(SHORT);
-
-  // 8. Placement
-  await tap(page, '.bar-btn:has-text("Placement")');
-  await page.waitForTimeout(PAUSE);
-  await tap(page, '.toggle-btn:has-text("Small")');
-  await page.waitForTimeout(PAUSE);
-  await tap(page, '.bar-btn:has-text("Placement")');
   await page.waitForTimeout(SHORT);
 
   // === Preview ===
@@ -269,8 +257,11 @@ async function main() {
 
   // Save
   const video = page.video();
+  if (video) {
+    await video.saveAs('./demo-videos/demo.webm');
+    console.log('✅ Video saved to ./demo-videos/demo.webm');
+  }
   await page.close();
-  if (video) { console.log('✅ Video at:', await video.path()); }
   await context.close();
   await browser.close();
   console.log('✅ Done');
