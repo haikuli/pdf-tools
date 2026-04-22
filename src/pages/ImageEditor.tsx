@@ -393,14 +393,14 @@ export default function ImageEditor({
             <h2 style={{ marginBottom: 12 }}>Add Image</h2>
             <div style={{display:'flex',gap:12,marginBottom:12}}>
               {onAddImage && (
-                <button className="add-card" style={{flex:1,maxHeight:'none',aspectRatio:'auto',padding:'16px 12px'}} onClick={() => { setShowAddSheet(false); onAddImage(); }}>
-                  <span className="add-icon">🖼</span>
+                <button style={{flex:1,padding:'20px 12px',background:'var(--surface2)',border:'2px dashed var(--border)',borderRadius:'var(--radius-sm)',color:'var(--text2)',cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:8,fontSize:12}} onClick={() => { setShowAddSheet(false); onAddImage(); }}>
+                  <span style={{fontSize:24}}>🖼</span>
                   <span>Album</span>
                 </button>
               )}
               {onScan && (
-                <button className="add-card" style={{flex:1,maxHeight:'none',aspectRatio:'auto',padding:'16px 12px'}} onClick={() => { setShowAddSheet(false); onScan(); }}>
-                  <span className="add-icon">📷</span>
+                <button style={{flex:1,padding:'20px 12px',background:'var(--surface2)',border:'2px dashed var(--border)',borderRadius:'var(--radius-sm)',color:'var(--text2)',cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:8,fontSize:12}} onClick={() => { setShowAddSheet(false); onScan(); }}>
+                  <span style={{fontSize:24}}>📷</span>
                   <span>Camera</span>
                 </button>
               )}
