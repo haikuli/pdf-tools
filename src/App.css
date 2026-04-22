@@ -248,6 +248,11 @@ html, body, #root {
   justify-content: center;
   gap: 6px;
   font-size: 12px;
+  overflow: visible;
+}
+.bottom-sheet .add-card .add-icon,
+.bottom-sheet .add-card span {
+  position: static;
 }
 .add-card .add-icon, .add-card span {
   position: absolute;
