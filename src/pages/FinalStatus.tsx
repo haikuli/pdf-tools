@@ -40,7 +40,7 @@ export default function FinalStatus({ pdfName, pdfUrl, pdfBlob, thumbnail, onClo
           <button className="btn-icon" onClick={onClose}>←</button>
           <h1 className="topbar-title">{fileName}</h1>
         </header>
-        <embed src={pdfUrl} type="application/pdf" className="pdf-iframe" />
+        <embed src={`${pdfUrl}#toolbar=0`} type="application/pdf" className="pdf-iframe" />
       </div>
     );
   }
