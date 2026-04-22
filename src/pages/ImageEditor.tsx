@@ -262,8 +262,8 @@ export default function ImageEditor({
         </div>
       </div>
 
-      {(showFilter || showLayoutSheet || showOptionsSheet) && (
-        <div className="editor-sheet-backdrop" onClick={() => { setShowFilter(false); setShowLayoutSheet(false); setShowOptionsSheet(false); }} />
+      {(showFilter || showLayoutSheet || showOptionsSheet || showAddSheet) && (
+        <div className="editor-sheet-backdrop" onClick={() => { setShowFilter(false); setShowLayoutSheet(false); setShowOptionsSheet(false); setShowAddSheet(false); }} />
       )}
 
       <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -387,6 +387,27 @@ export default function ImageEditor({
           </div>
         )}
 
+        {/* Add Image sheet */}
+        {showAddSheet && (
+          <div className="editor-sheet">
+            <h2 style={{ marginBottom: 12 }}>Add Image</h2>
+            <div style={{display:'flex',gap:12,marginBottom:12}}>
+              {onAddImage && (
+                <button className="add-card" style={{flex:1,maxHeight:'none',aspectRatio:'auto',padding:'16px 12px'}} onClick={() => { setShowAddSheet(false); onAddImage(); }}>
+                  <span className="add-icon">🖼</span>
+                  <span>Album</span>
+                </button>
+              )}
+              {onScan && (
+                <button className="add-card" style={{flex:1,maxHeight:'none',aspectRatio:'auto',padding:'16px 12px'}} onClick={() => { setShowAddSheet(false); onScan(); }}>
+                  <span className="add-icon">📷</span>
+                  <span>Camera</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="bottom-bar editor-bar">
           <button className="bar-btn" onClick={() => { closeAllSheets(); handleRotate(); }} disabled={cropping}>
             <span className="bar-icon">↻</span><span>Rotate</span>
@@ -422,30 +443,6 @@ export default function ImageEditor({
           )}
         </div>
       </div>
-
-      {showAddSheet && (
-        <>
-          <div className="sheet-backdrop" onClick={() => setShowAddSheet(false)} />
-          <div className="bottom-sheet">
-            <h2>Add Image</h2>
-            <div style={{display:'flex',gap:12,marginBottom:12}}>
-              {onAddImage && (
-                <button className="add-card" style={{flex:1,maxHeight:'none',aspectRatio:'auto',padding:'16px 12px'}} onClick={() => { setShowAddSheet(false); onAddImage(); }}>
-                  <span className="add-icon">🖼</span>
-                  <span>Album</span>
-                </button>
-              )}
-              {onScan && (
-                <button className="add-card" style={{flex:1,maxHeight:'none',aspectRatio:'auto',padding:'16px 12px'}} onClick={() => { setShowAddSheet(false); onScan(); }}>
-                  <span className="add-icon">📷</span>
-                  <span>Camera</span>
-                </button>
-              )}
-            </div>
-            <button className="btn-text" style={{width:'100%',textAlign:'center'}} onClick={() => setShowAddSheet(false)}>Cancel</button>
-          </div>
-        </>
-      )}
 
       {showConfirm && (
         <div className="dialog-overlay">
