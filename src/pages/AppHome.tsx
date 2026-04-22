@@ -93,7 +93,7 @@ export default function AppHome({ onNavigate }: Props) {
         </button>
         <button className="app-tab">
           <span className="app-tab-icon">⚡</span>
-          <span>Quick</span>
+          <span>Fatafat</span>
         </button>
         <button className="app-tab">
           <span className="app-tab-icon">🔍</span>

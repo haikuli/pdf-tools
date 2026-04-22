@@ -135,7 +135,9 @@ async function main() {
 
   // === Editor ===
 
-  // 1. Rotate
+  // 1. Rotate (twice = 180°, avoids aspect ratio issue)
+  await tap(page, '.bar-btn:has-text("Rotate")');
+  await page.waitForTimeout(SHORT);
   await tap(page, '.bar-btn:has-text("Rotate")');
   await page.waitForTimeout(PAUSE);
 
