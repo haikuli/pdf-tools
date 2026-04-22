@@ -241,6 +241,7 @@ html, body, #root {
 .bottom-sheet .add-card {
   height: auto;
   padding-bottom: 0;
+  padding: 20px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;

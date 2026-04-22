@@ -51,9 +51,9 @@ async function main() {
   await page.waitForTimeout(SHORT);
 
   const fileList = page.locator('.file-list');
-  await fileList.evaluate(el => el.scrollTop = 200);
+  await fileList.evaluate((el: HTMLElement) => el.scrollTo({ top: 500, behavior: 'smooth' }));
   await page.waitForTimeout(PAUSE);
-  await fileList.evaluate(el => el.scrollTop = 0);
+  await fileList.evaluate((el: HTMLElement) => el.scrollTo({ top: 0, behavior: 'smooth' }));
   await page.waitForTimeout(SHORT);
 
   // Search → preview
@@ -242,9 +242,9 @@ async function main() {
   await page.waitForTimeout(PAUSE);
 
   const preview = page.locator('.preview-list, .preview-grid');
-  await preview.evaluate(el => el.scrollTo({ top: 400, behavior: 'smooth' })).catch(() => {});
+  await preview.evaluate((el: HTMLElement) => el.scrollTo({ top: 600, behavior: 'smooth' })).catch(() => {});
   await page.waitForTimeout(PAUSE);
-  await preview.evaluate(el => el.scrollTo({ top: 0, behavior: 'smooth' })).catch(() => {});
+  await preview.evaluate((el: HTMLElement) => el.scrollTo({ top: 0, behavior: 'smooth' })).catch(() => {});
   await page.waitForTimeout(PAUSE);
 
   // === Convert & Done ===
