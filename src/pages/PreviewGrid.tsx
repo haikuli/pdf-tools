@@ -1,6 +1,12 @@
 import { useState, useCallback } from 'react';
 import type { ImageItem, PageSize, PageOrientation } from '../types';
 
+const filterToCSS = (f?: string) =>
+  f === 'magic' ? 'contrast(1.3) brightness(1.1) saturate(0.4)' :
+  f === 'gray' ? 'grayscale(1) contrast(1.2)' :
+  f === 'bw' ? 'grayscale(1) contrast(3) brightness(1.3)' :
+  f === 'color' ? 'contrast(1.2) saturate(1.5) brightness(1.05)' : 'none';
+
 interface Props {
   images: ImageItem[];
   addImages: (files: File[]) => void;
@@ -60,6 +66,7 @@ export default function PreviewGrid({
               <img src={img.url} alt={img.name} style={{
                 ...(img.rotation ? {transform: `rotate(${img.rotation}deg)`} : {}),
                 ...(hasPageFrame ? { objectFit: 'contain' as const, width: '100%', height: '100%' } : {}),
+                filter: filterToCSS(img.filter),
               }} />
               <span className="card-index">{idx + 1}</span>
             </div>
@@ -82,6 +89,7 @@ export default function PreviewGrid({
                 <img src={img.url} alt={img.name} style={{
                   ...(img.rotation ? {transform: `rotate(${img.rotation}deg)`} : {}),
                   ...(hasPageFrame ? { objectFit: 'contain' as const } : {}),
+                  filter: filterToCSS(img.filter),
                 }} />
               </div>
               <span className="preview-list-page-num">{idx + 1}</span>

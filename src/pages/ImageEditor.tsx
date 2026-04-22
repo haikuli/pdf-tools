@@ -34,8 +34,13 @@ export default function ImageEditor({
   const [showQuitDialog, setShowQuitDialog] = useState(false);
   const [cropping, setCropping] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
-  const [activeFilter, setActiveFilter] = useState('original');
   const [applyToAll, setApplyToAll] = useState(false);
+
+  const img = images[currentIndex];
+  const activeFilter = img?.filter || 'original';
+  const setActiveFilter = (f: string) => {
+    if (img) updateImage(img.id, { filter: f });
+  };
   const [showLayoutSheet, setShowLayoutSheet] = useState(false);
   const [showOptionsSheet, setShowOptionsSheet] = useState(false);
   const [showAddSheet, setShowAddSheet] = useState(false);
@@ -47,7 +52,6 @@ export default function ImageEditor({
   const wrapRef = useRef<HTMLDivElement>(null);
   const thumbScrollRef = useRef<HTMLDivElement>(null);
   const [previewUrl, setPreviewUrl] = useState('');
-  const img = images[currentIndex];
 
   // Auto-scroll thumbnail into view
   useEffect(() => {

@@ -10,6 +10,7 @@ export interface ImageItem {
   fillMode?: FillMode;
   alignment?: Alignment;
   margin?: Margin;
+  filter?: string;
 }
 
 export type PageSize = 'Auto' | 'A4' | 'Letter' | 'Legal';
