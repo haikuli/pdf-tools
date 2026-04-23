@@ -409,6 +409,11 @@ export default function ImageEditor({
         )}
 
         <div className="bottom-bar editor-bar">
+          {_onRetake && (
+            <button className="bar-btn" onClick={() => { closeAllSheets(); _onRetake(); }} disabled={cropping}>
+              <span className="bar-icon">📷</span><span>Retake</span>
+            </button>
+          )}
           <button className="bar-btn" onClick={() => { closeAllSheets(); handleRotate(); }} disabled={cropping}>
             <span className="bar-icon">↻</span><span>Rotate</span>
           </button>

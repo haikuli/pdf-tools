@@ -260,6 +260,7 @@ export default function App() {
             if (img) { setScanRetakeId(img.id); setPage('scan-retake'); }
           }}
           onReorder={() => { setReorderSnapshot([...scanImages]); setPage('scan-reorder'); }}
+          onAddImage={() => { setAddingFromEditor(true); setPage('picker'); }}
           onScan={() => setPage('scan-capture')}
           pageSize={pageSize}
           setPageSize={setPageSize}
