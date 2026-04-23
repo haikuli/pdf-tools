@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import CropOverlay from '../components/CropOverlay';
+import { ALL_MOCK_IMAGES } from './ImagePicker';
 
 interface Props { onComplete: (f: string, b: string | null) => void; onBack: () => void; onSwitchToScan?: () => void; }
 type Mode = 'id-card' | 'passport' | 'single';
-type Step = 'notice' | 'guide' | 'shoot' | 'preview' | 'adjust' | 'naming' | 'progress' | 'done';
+type Step = 'notice' | 'mode-select' | 'shoot' | 'album-pick' | 'preview' | 'adjust' | 'naming' | 'progress' | 'done';
 type Side = 'front' | 'back';
 
 export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchToScan }: Props) {
-  const [step, setStep] = useState<Step>('guide');
+  const [step, setStep] = useState<Step>('mode-select');
   const [showPrivacyNotice, setShowPrivacyNotice] = useState(true);
   const [mode, setMode] = useState<Mode>('id-card');
   const [modeConfirmed, setModeConfirmed] = useState(false);
@@ -36,11 +37,25 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
   const touchStartX = useRef(0);
   const [retaking, setRetaking] = useState(false);
 
+  // Album picker state for 2-image selection
+  const [albumSelected, setAlbumSelected] = useState<string[]>([]);
+  const [albumFolder, setAlbumFolder] = useState<string>('All Photos');
+
+  const needsTwoImages = mode === 'id-card';
+
+  // Mock album images grouped by folder
+  const albumFolders = ['All Photos', 'Camera', 'Screenshots', 'Downloads', 'Favorites'];
+  const albumImages = ALL_MOCK_IMAGES.filter(img => {
+    if (albumFolder === 'All Photos') return true;
+    const prefix = albumFolder === 'Camera' ? 'cam' : albumFolder === 'Screenshots' ? 'ss' : albumFolder === 'Downloads' ? 'dl' : 'fav';
+    return img.id.startsWith(prefix);
+  });
+
   const startCam = useCallback(()=>{setCamReady(false);navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}}}).then(s=>{streamRef.current=s;if(videoRef.current)videoRef.current.srcObject=s;setCamReady(true);}).catch(()=>setCamReady(false));},[]);
   const stopCam = useCallback(()=>{if(streamRef.current){streamRef.current.getTracks().forEach(t=>t.stop());streamRef.current=null;}},[]);
   const toggleFlash = useCallback(()=>{if(!streamRef.current)return;const t=streamRef.current.getVideoTracks()[0];if(t){const n=!flashOn;t.applyConstraints({advanced:[{torch:n}as any]}).catch(()=>{});setFlashOn(n);}},[flashOn]);
 
-  useEffect(()=>{if(step==='guide'||step==='shoot')startCam();else stopCam();return()=>stopCam();},[step,startCam,stopCam]);
+  useEffect(()=>{if(step==='mode-select'||step==='shoot')startCam();else stopCam();return()=>stopCam();},[step,startCam,stopCam]);
 
   // Adjust image drawing
   const adjustUrl = adjustIdx===0 ? frontUrl : backUrl;
@@ -89,13 +104,9 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
     if(!videoRef.current)return;
     const v=videoRef.current;
     const vw=v.videoWidth, vh=v.videoHeight;
-    // Draw full frame first
     const full=document.createElement('canvas');
     full.width=vw; full.height=vh;
     full.getContext('2d')!.drawImage(v,0,0);
-    // Calculate frame crop area based on mode
-    // ID card/single: left 5%, right 5%, vertically centered, aspect 1.586:1
-    // Passport: left 8%, right 8%, top 10%, bottom 10%
     const isP=mode==='passport';
     const fL=isP?0.08:0.05, fR=isP?0.08:0.05;
     const fW=1-fL-fR;
@@ -103,11 +114,9 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
     if(isP){
       cropY=Math.round(vh*0.1); cropH=Math.round(vh*0.8);
     }else{
-      // Frame width in pixels, height = width / 1.586
       cropH=Math.round(cropW/1.586);
       cropY=Math.round((vh-cropH)/2);
     }
-    // Clamp
     cropX=Math.max(0,cropX); cropY=Math.max(0,cropY);
     cropW=Math.min(cropW,vw-cropX); cropH=Math.min(cropH,vh-cropY);
     const out=document.createElement('canvas');
@@ -116,7 +125,6 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
     out.toBlob(b=>{
       if(!b)return;const u=URL.createObjectURL(b);
       if(mode==='passport'){
-        // Split horizontally into two pages (top = previous, bottom = next)
         const halfH=Math.round(cropH/2);
         const topC=document.createElement('canvas');
         topC.width=cropW;topC.height=halfH;
@@ -141,14 +149,54 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
       else{setBackUrl(u);setRetaking(false);setStep('preview');}
     },'image/jpeg',0.92);
   };
+
+  // Single-file gallery handler (for single mode or retake)
   const handleGallery=(e:React.ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;const u=URL.createObjectURL(f);if(side==='front'){setFrontUrl(u);if(mode==='single'||retaking){setRetaking(false);setStep('preview');}else{setSide('back');setSideToast('Front side captured! Now scan the back side.');setTimeout(()=>setSideToast(null),2500);}}else{setBackUrl(u);setRetaking(false);setStep('preview');}e.target.value='';};
+
+  const toggleAlbumSelect = (id: string) => {
+    setAlbumSelected(prev => {
+      if (prev.includes(id)) return prev.filter(i => i !== id);
+      const maxSelect = needsTwoImages ? 2 : 1;
+      if (prev.length >= maxSelect) return prev;
+      return [...prev, id];
+    });
+  };
+
+  const confirmAlbumPick = () => {
+    const requiredCount = needsTwoImages ? 2 : 1;
+    if (albumSelected.length !== requiredCount) return;
+    const img0 = ALL_MOCK_IMAGES.find(i => i.id === albumSelected[0]);
+    if (needsTwoImages) {
+      const img1 = ALL_MOCK_IMAGES.find(i => i.id === albumSelected[1]);
+      if (img0) setFrontUrl(img0.url);
+      if (img1) setBackUrl(img1.url);
+    } else {
+      // Passport & Single: 1 image
+      if (img0) setFrontUrl(img0.url);
+      setBackUrl(null);
+    }
+    setAlbumSelected([]);
+    setStep('preview');
+  };
+
   const goBack=()=>{stopCam();onBack();};
   const rotate=()=>setRots(p=>{const n=[...p];n[adjustIdx]=(n[adjustIdx]+90)%360;return n;});
   const flt=filter==='bw'?'grayscale(1) contrast(2)':filter==='gray'?'grayscale(1)':filter==='magic'?'contrast(1.3) brightness(1.1) saturate(0.3)':'none';
 
-  if(step==='guide')return(
+  // Handle back from shoot page
+  const handleShootBack = () => {
+    // If front is captured (mid-capture for 2-sided modes), warn user
+    if (frontUrl && !retaking && mode !== 'single') {
+      setShowQuitDialog(true);
+    } else {
+      setStep('mode-select'); setModeConfirmed(false);
+    }
+  };
+
+  // ===== MODE SELECT PAGE =====
+  if(step==='mode-select')return(
     <div className="page">
-      <header className="topbar"><button className="btn-icon" onClick={goBack}>←</button><h1 className="topbar-title">ID Card</h1><button className="btn-icon" onClick={()=>setShowGrid(!showGrid)}>{showGrid?'▦':'▣'}</button><button className="btn-icon" onClick={toggleFlash}>{flashOn?'⚡':'🔦'}</button></header>
+      <header className="topbar"><button className="btn-icon" onClick={goBack}>←</button><h1 className="topbar-title"></h1><button className="btn-icon" onClick={()=>setShowGrid(!showGrid)}>{showGrid?'▦':'▣'}</button><button className="btn-icon" onClick={toggleFlash}>{flashOn?'⚡':'🔦'}</button></header>
       <div className="scan-capture-body">
         <div className="camera-preview">
           <video ref={videoRef} autoPlay playsInline muted className="camera-video"/>
@@ -220,12 +268,12 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
     </div>
   );
 
-  // Shoot: actual capture with frame
+  // ===== SHOOT PAGE =====
   if(step==='shoot'){
     const isP=mode==='passport';
     return(
       <div className="page">
-        <header className="topbar"><button className="btn-icon" onClick={()=>setStep('guide')}>←</button><h1 className="topbar-title">{mode==='passport'?'Passport':side==='front'?'Front Side':'Back Side'}</h1><button className="btn-icon" onClick={()=>setShowGrid(!showGrid)}>{showGrid?'▦':'▣'}</button><button className="btn-icon" onClick={toggleFlash}>{flashOn?'⚡':'🔦'}</button></header>
+        <header className="topbar"><button className="btn-icon" onClick={handleShootBack}>←</button><h1 className="topbar-title">{mode==='passport'?'Passport':mode==='single'?'Single Side':side==='front'?'Front Side':'Back Side'}</h1><button className="btn-icon" onClick={()=>setShowGrid(!showGrid)}>{showGrid?'▦':'▣'}</button><button className="btn-icon" onClick={toggleFlash}>{flashOn?'⚡':'🔦'}</button></header>
         <div className="scan-capture-body">
           <div className="camera-preview">
             <video ref={videoRef} autoPlay playsInline muted className="camera-video"/>
@@ -233,25 +281,106 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
             {!isP&&<div className="idcard-frame"><div className="viewfinder-corner vf-tl"/><div className="viewfinder-corner vf-tr"/><div className="viewfinder-corner vf-bl"/><div className="viewfinder-corner vf-br"/></div>}
             {isP&&<div className="passport-frame-overlay"><div className="passport-half"><span className="passport-label">Previous Page</span></div><div className="passport-divider"/><div className="passport-half"><span className="passport-label">Next Page</span></div></div>}
           </div>
-          {onSwitchToScan && !retaking && (
-            <div className="scan-mode-tabs">
-              <span className="scan-mode-tab" onClick={() => { stopCam(); onSwitchToScan(); }}>Scan</span>
-              <span className="scan-mode-tab active">ID Card</span>
-            </div>
-          )}
           <div className="scan-capture-actions">
-            <button className="scan-btn-secondary" onClick={()=>galleryRef.current?.click()}>Album</button>
+            <button className="scan-btn-secondary" onClick={()=>{
+              if (retaking) {
+                // Retake uses single file picker
+                galleryRef.current?.click();
+              } else if (needsTwoImages && !frontUrl) {
+                // First pick for 2-image mode: go to album picker
+                setAlbumSelected([]);
+                setAlbumFolder('All Photos');
+                setStep('album-pick');
+              } else if (!needsTwoImages) {
+                // Single mode: also go to mock album picker (1 image)
+                setAlbumSelected([]);
+                setAlbumFolder('All Photos');
+                setStep('album-pick');
+              } else {
+                // Already have front, picking back via single file
+                galleryRef.current?.click();
+              }
+            }}>Album</button>
             <button className="scan-btn-capture" onClick={capture} disabled={!camReady}><span className="capture-ring"/></button>
             <div style={{width:64}}/>
           </div>
         </div>
         <input ref={galleryRef} type="file" accept="image/*" hidden onChange={handleGallery}/>
         {sideToast && <div className="picker-toast">{sideToast}</div>}
+        {showQuitDialog && (
+          <div className="dialog-overlay">
+            <div className="dialog">
+              <h2>Discard photo?</h2>
+              <p>Your captured front side photo will not be saved.</p>
+              <div className="dialog-actions">
+                <button className="btn-secondary" onClick={() => setShowQuitDialog(false)}>Cancel</button>
+                <button className="btn-danger" onClick={() => { setShowQuitDialog(false); setFrontUrl(null); setBackUrl(null); setSide('front'); setModeConfirmed(false); setStep('mode-select'); }}>Discard</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
 
-  // Preview
+  // ===== ALBUM PICKER (mock 2-image selection) =====
+  if(step==='album-pick'){
+    const requiredCount = needsTwoImages ? 2 : 1;
+    return(
+      <div className="page">
+        <header className="topbar">
+          <button className="btn-icon" onClick={()=>{setAlbumSelected([]);setStep('shoot');}}>←</button>
+          <h1 className="topbar-title">Select {requiredCount === 2 ? '2 Images' : 'Image'}</h1>
+        </header>
+        <div className="folder-dropdown-wrap">
+          <select className="folder-dropdown" value={albumFolder} onChange={e=>setAlbumFolder(e.target.value)}>
+            {albumFolders.map(f=><option key={f} value={f}>{f}</option>)}
+          </select>
+          <span className="dropdown-arrow">▾</span>
+        </div>
+        <div className="picker-grid">
+          {albumImages.map((img) => {
+            const selIdx = albumSelected.indexOf(img.id);
+            const isSelected = selIdx !== -1;
+            return (
+              <div key={img.id} className={`picker-thumb ${isSelected ? 'selected' : ''}`} onClick={()=>toggleAlbumSelect(img.id)}>
+                <img src={img.url} alt={img.name} />
+                {isSelected && (
+                  <div className="thumb-order">{selIdx + 1}</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div className="bottom-bar" style={{flexDirection:'column',gap:8}}>
+          {albumSelected.length > 0 && requiredCount === 2 && (
+            <div style={{display:'flex',gap:12,alignItems:'center',width:'100%',justifyContent:'center'}}>
+              {albumSelected.map((imgId, i) => {
+                const img = ALL_MOCK_IMAGES.find(m=>m.id===imgId);
+                return img ? (
+                  <div key={i} style={{display:'flex',alignItems:'center',gap:6}}>
+                    <span style={{fontSize:12,color:'var(--text2)'}}>{i===0?'Front':'Back'}</span>
+                    <div style={{width:40,height:40,borderRadius:6,overflow:'hidden',border:'2px solid var(--primary)'}}>
+                      <img src={img.url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} />
+                    </div>
+                  </div>
+                ) : null;
+              })}
+            </div>
+          )}
+          <button
+            className="btn-primary btn-confirm-full"
+            disabled={albumSelected.length !== requiredCount}
+            onClick={confirmAlbumPick}
+          >
+            Confirm ({albumSelected.length}/{requiredCount})
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ===== PREVIEW =====
   if(step==='preview')return(
     <div className="page">
       <header className="topbar"><button className="btn-icon" onClick={()=>setShowQuitDialog(true)}>←</button><h1 className="topbar-title">Preview</h1></header>
@@ -286,6 +415,7 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
     </div>
   );
 
+  // ===== NAMING =====
   if(step==='naming')return(
     <div className="page center-page"><div className="sheet-backdrop" onClick={()=>setStep('preview')}/><div className="bottom-sheet"><h2>Name Your PDF</h2>
       <input type="text" className="name-input" value={pdfName} onChange={e=>setPdfName(e.target.value)} autoFocus/>
@@ -294,10 +424,12 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
       </div></div></div>
   );
 
+  // ===== PROGRESS =====
   if(step==='progress')return(
     <div className="page center-page"><div className="progress-wrap"><div className="progress-ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" className="ring-bg"/><circle cx="60" cy="60" r="52" className={progress>=100?'ring-done':'ring-fg'} strokeDasharray={`${(progress/100)*327} 327`}/></svg><span className="progress-text">{progress>=100?'✓':`${progress}%`}</span></div><p className="progress-label">{progress>=100?'Done!':'Creating PDF...'}</p></div></div>
   );
 
+  // ===== DONE =====
   if(step==='done'){
     if(showDonePreview){
       return(
@@ -317,8 +449,7 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
     );
   }
 
-  // Adjust - edit with swipe between front/back, rotate, crop, retake
-
+  // ===== ADJUST (Edit) =====
   const images = [frontUrl, backUrl].filter(Boolean) as string[];
   const handleSwipe = (dir: 'left' | 'right') => {
     if (dir === 'left' && adjustIdx === 0 && images.length > 1) setAdjustIdx(1);
@@ -343,7 +474,6 @@ export default function IdCardScan({ onComplete: _onComplete, onBack, onSwitchTo
     }, 'image/png');
   };
 
-  // Touch swipe handling for edit page
   const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (cropping) return;

@@ -23,6 +23,7 @@ interface PdfFile {
   date: string;
   createdDate: string;
   dateTs: number;
+  createdTs: number;
   path: string;
   locked: boolean;
   thumb: string;
@@ -39,27 +40,28 @@ const TOOLS = [
   { icon: <SplitPdfIcon />, label: 'Extract PDF', page: 'split-pages' as Page },
 ];
 
+const NOW = Date.now();
 const MOCK_FILES: PdfFile[] = [
-  { id: 'f1', name: 'Invoice_2026.pdf', size: '2.3 MB', sizeBytes: 2300000, date: '2026-03-28', createdDate: '2026-03-01', dateTs: 1743120000000, path: 'Documents/', locked: false, thumb: '' },
-  { id: 'f2', name: 'Contract_signed.pdf', size: '856 KB', sizeBytes: 856000, date: '2026-03-25', createdDate: '2026-02-15', dateTs: 1742860800000, path: 'Documents/', locked: true, thumb: '' },
-  { id: 'f3', name: 'Presentation.pdf', size: '5.1 MB', sizeBytes: 5100000, date: '2026-03-20', createdDate: '2026-03-10', dateTs: 1742428800000, path: 'Downloads/', locked: false, thumb: '' },
-  { id: 'f4', name: 'Tax_Report_2025.pdf', size: '1.2 MB', sizeBytes: 1200000, date: '2026-03-15', createdDate: '2025-12-20', dateTs: 1741996800000, path: 'Documents/', locked: true, thumb: '' },
-  { id: 'f5', name: 'Meeting_Notes.pdf', size: '340 KB', sizeBytes: 340000, date: '2026-03-10', createdDate: '2026-03-10', dateTs: 1741564800000, path: 'Documents/', locked: false, thumb: '' },
-  { id: 'f6', name: 'User_Manual.pdf', size: '8.7 MB', sizeBytes: 8700000, date: '2026-02-28', createdDate: '2025-06-15', dateTs: 1740700800000, path: 'Downloads/', locked: false, thumb: '' },
-  { id: 'f7', name: 'Receipt_Amazon.pdf', size: '120 KB', sizeBytes: 120000, date: '2026-02-20', createdDate: '2026-02-20', dateTs: 1740009600000, path: 'Downloads/', locked: false, thumb: '' },
-  { id: 'f8', name: 'Project_Plan_Q1.pdf', size: '3.4 MB', sizeBytes: 3400000, date: '2026-02-10', createdDate: '2026-01-05', dateTs: 1739145600000, path: 'Documents/', locked: false, thumb: '' },
-  { id: 'f9', name: 'Insurance_Policy.pdf', size: '1.8 MB', sizeBytes: 1800000, date: '2026-01-25', createdDate: '2025-11-10', dateTs: 1737763200000, path: 'Documents/', locked: true, thumb: '' },
-  { id: 'f10', name: 'Travel_Itinerary.pdf', size: '450 KB', sizeBytes: 450000, date: '2026-01-15', createdDate: '2026-01-12', dateTs: 1736899200000, path: 'Downloads/', locked: false, thumb: '' },
-  { id: 'f11', name: 'Resume_2026.pdf', size: '280 KB', sizeBytes: 280000, date: '2026-01-05', createdDate: '2025-12-28', dateTs: 1736035200000, path: 'Documents/', locked: false, thumb: '' },
-  { id: 'f12', name: 'Bank_Statement_Dec.pdf', size: '920 KB', sizeBytes: 920000, date: '2025-12-20', createdDate: '2025-12-20', dateTs: 1734652800000, path: 'Documents/', locked: true, thumb: '' },
-  { id: 'f13', name: 'Recipe_Collection.pdf', size: '6.2 MB', sizeBytes: 6200000, date: '2025-12-05', createdDate: '2025-08-15', dateTs: 1733356800000, path: 'Downloads/', locked: false, thumb: '' },
-  { id: 'f14', name: 'Warranty_Card.pdf', size: '150 KB', sizeBytes: 150000, date: '2025-11-18', createdDate: '2025-11-18', dateTs: 1731888000000, path: 'Documents/', locked: false, thumb: '' },
-  { id: 'f15', name: 'Lease_Agreement.pdf', size: '2.1 MB', sizeBytes: 2100000, date: '2025-11-01', createdDate: '2025-07-01', dateTs: 1730419200000, path: 'Documents/', locked: true, thumb: '' },
-  { id: 'f16', name: 'Photo_Album_Export.pdf', size: '12.5 MB', sizeBytes: 12500000, date: '2025-10-20', createdDate: '2025-10-20', dateTs: 1729382400000, path: 'Downloads/', locked: false, thumb: '' },
-  { id: 'f17', name: 'Course_Certificate.pdf', size: '380 KB', sizeBytes: 380000, date: '2025-10-10', createdDate: '2025-09-30', dateTs: 1728518400000, path: 'Documents/', locked: false, thumb: '' },
-  { id: 'f18', name: 'Budget_2026.pdf', size: '1.5 MB', sizeBytes: 1500000, date: '2025-09-28', createdDate: '2025-09-01', dateTs: 1727481600000, path: 'Documents/', locked: false, thumb: '' },
-  { id: 'f19', name: 'Medical_Report.pdf', size: '4.3 MB', sizeBytes: 4300000, date: '2025-09-15', createdDate: '2025-09-15', dateTs: 1726358400000, path: 'Documents/', locked: true, thumb: '' },
-  { id: 'f20', name: 'Ebook_Chapter1.pdf', size: '7.8 MB', sizeBytes: 7800000, date: '2025-08-30', createdDate: '2025-08-30', dateTs: 1724976000000, path: 'Downloads/', locked: false, thumb: '' },
+  { id: 'f1', name: 'Invoice_2026.pdf', size: '2.3 MB', sizeBytes: 2300000, date: '2026-04-23', createdDate: '2026-04-23', dateTs: NOW - 3600000, createdTs: NOW - 3600000, path: 'Documents/', locked: false, thumb: '' },
+  { id: 'f2', name: 'Contract_signed.pdf', size: '856 KB', sizeBytes: 856000, date: '2026-04-23', createdDate: '2026-04-23', dateTs: NOW - 7200000, createdTs: NOW - 7200000, path: 'Documents/', locked: true, thumb: '' },
+  { id: 'f3', name: 'Presentation.pdf', size: '5.1 MB', sizeBytes: 5100000, date: '2026-04-22', createdDate: '2026-04-22', dateTs: NOW - 43200000, createdTs: NOW - 43200000, path: 'Downloads/', locked: false, thumb: '' },
+  { id: 'f4', name: 'Tax_Report_2025.pdf', size: '1.2 MB', sizeBytes: 1200000, date: '2026-03-15', createdDate: '2025-12-20', dateTs: 1741996800000, createdTs: 1608422400000, path: 'Documents/', locked: true, thumb: '' },
+  { id: 'f5', name: 'Meeting_Notes.pdf', size: '340 KB', sizeBytes: 340000, date: '2026-03-10', createdDate: '2026-03-10', dateTs: 1741564800000, createdTs: 1741564800000, path: 'Documents/', locked: false, thumb: '' },
+  { id: 'f6', name: 'User_Manual.pdf', size: '8.7 MB', sizeBytes: 8700000, date: '2026-02-28', createdDate: '2025-06-15', dateTs: 1740700800000, createdTs: 1718409600000, path: 'Downloads/', locked: false, thumb: '' },
+  { id: 'f7', name: 'Receipt_Amazon.pdf', size: '120 KB', sizeBytes: 120000, date: '2026-02-20', createdDate: '2026-02-20', dateTs: 1740009600000, createdTs: 1740009600000, path: 'Downloads/', locked: false, thumb: '' },
+  { id: 'f8', name: 'Project_Plan_Q1.pdf', size: '3.4 MB', sizeBytes: 3400000, date: '2026-02-10', createdDate: '2026-01-05', dateTs: 1739145600000, createdTs: 1736035200000, path: 'Documents/', locked: false, thumb: '' },
+  { id: 'f9', name: 'Insurance_Policy.pdf', size: '1.8 MB', sizeBytes: 1800000, date: '2026-01-25', createdDate: '2025-11-10', dateTs: 1737763200000, createdTs: 1731196800000, path: 'Documents/', locked: true, thumb: '' },
+  { id: 'f10', name: 'Travel_Itinerary.pdf', size: '450 KB', sizeBytes: 450000, date: '2026-01-15', createdDate: '2026-01-12', dateTs: 1736899200000, createdTs: 1736640000000, path: 'Downloads/', locked: false, thumb: '' },
+  { id: 'f11', name: 'Resume_2026.pdf', size: '280 KB', sizeBytes: 280000, date: '2026-01-05', createdDate: '2025-12-28', dateTs: 1736035200000, createdTs: 1735344000000, path: 'Documents/', locked: false, thumb: '' },
+  { id: 'f12', name: 'Bank_Statement_Dec.pdf', size: '920 KB', sizeBytes: 920000, date: '2025-12-20', createdDate: '2025-12-20', dateTs: 1734652800000, createdTs: 1734652800000, path: 'Documents/', locked: true, thumb: '' },
+  { id: 'f13', name: 'Recipe_Collection.pdf', size: '6.2 MB', sizeBytes: 6200000, date: '2025-12-05', createdDate: '2025-08-15', dateTs: 1733356800000, createdTs: 1723680000000, path: 'Downloads/', locked: false, thumb: '' },
+  { id: 'f14', name: 'Warranty_Card.pdf', size: '150 KB', sizeBytes: 150000, date: '2025-11-18', createdDate: '2025-11-18', dateTs: 1731888000000, createdTs: 1731888000000, path: 'Documents/', locked: false, thumb: '' },
+  { id: 'f15', name: 'Lease_Agreement.pdf', size: '2.1 MB', sizeBytes: 2100000, date: '2025-11-01', createdDate: '2025-07-01', dateTs: 1730419200000, createdTs: 1719792000000, path: 'Documents/', locked: true, thumb: '' },
+  { id: 'f16', name: 'Photo_Album_Export.pdf', size: '12.5 MB', sizeBytes: 12500000, date: '2025-10-20', createdDate: '2025-10-20', dateTs: 1729382400000, createdTs: 1729382400000, path: 'Downloads/', locked: false, thumb: '' },
+  { id: 'f17', name: 'Course_Certificate.pdf', size: '380 KB', sizeBytes: 380000, date: '2025-10-10', createdDate: '2025-09-30', dateTs: 1728518400000, createdTs: 1727654400000, path: 'Documents/', locked: false, thumb: '' },
+  { id: 'f18', name: 'Budget_2026.pdf', size: '1.5 MB', sizeBytes: 1500000, date: '2025-09-28', createdDate: '2025-09-01', dateTs: 1727481600000, createdTs: 1725148800000, path: 'Documents/', locked: false, thumb: '' },
+  { id: 'f19', name: 'Medical_Report.pdf', size: '4.3 MB', sizeBytes: 4300000, date: '2025-09-15', createdDate: '2025-09-15', dateTs: 1726358400000, createdTs: 1726358400000, path: 'Documents/', locked: true, thumb: '' },
+  { id: 'f20', name: 'Ebook_Chapter1.pdf', size: '7.8 MB', sizeBytes: 7800000, date: '2025-08-30', createdDate: '2025-08-30', dateTs: 1724976000000, createdTs: 1724976000000, path: 'Downloads/', locked: false, thumb: '' },
 ];
 
 const SORT_FIELDS: { key: SortField; label: string }[] = [
@@ -86,9 +88,26 @@ export default function Home({ onNavigate, onBack }: Props) {
   const [showSearch, setShowSearch] = useState(false);
   const fileLongPress = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [viewingFile, setViewingFile] = useState<string | null>(null);
+  const [viewedFiles, setViewedFiles] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('pdf_viewed_files') || '[]')); } catch { return new Set(); }
+  });
   const [searchHistory, setSearchHistory] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('pdf_search_history') || '[]'); } catch { return []; }
   });
+
+  const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+  const isNewFile = (file: PdfFile) => {
+    return (NOW - file.createdTs) < TWENTY_FOUR_HOURS && !viewedFiles.has(file.id);
+  };
+
+  const markViewed = (fileId: string) => {
+    setViewedFiles(prev => {
+      const next = new Set(prev);
+      next.add(fileId);
+      localStorage.setItem('pdf_viewed_files', JSON.stringify([...next]));
+      return next;
+    });
+  };
 
   const saveSearch = (q: string) => {
     if (!q.trim()) return;
@@ -128,6 +147,7 @@ export default function Home({ onNavigate, onBack }: Props) {
       toggleSelect(file.id);
       return;
     }
+    markViewed(file.id);
     if (file.locked) {
       setPasswordDialog(file);
       setPassword('');
@@ -321,7 +341,7 @@ export default function Home({ onNavigate, onBack }: Props) {
             <div className="file-info">
               <span className="file-name">
                 {file.name}
-                {file.id === 'f1' && <span className="new-badge">NEW</span>}
+                {isNewFile(file) && <span className="new-badge">NEW</span>}
               </span>
               <span className="file-meta">{file.size} · {file.date}</span>
             </div>

@@ -46,6 +46,7 @@ Display all PDF files in user internal storage & SD card. External devices (e.g.
 - File name
 - File size
 - Modification date
+- **"NEW" badge**: Shown when file was created within the last 24 hours AND user has not opened it yet. Badge disappears once either condition is no longer met. Viewed state is persisted in localStorage.
 
 **Note:** File path is NOT shown in the list view. Path is available in the Properties dialog.
 
@@ -125,7 +126,7 @@ Convert one or more images into a single PDF file. Supports both gallery selecti
 - File Format: PDF
 - Page Layout: One image per page
 - Default Page Size: A4 Portrait (configurable in Settings)
-- File Naming: Default 'my-document.pdf', user can rename
+- File Naming: Default 'Image_[timestamp].pdf', user can rename
 - Output saved to: /storage/emulated/0/Documents/MXPlayer/PDF/
 
 **User Flow:**
@@ -240,26 +241,29 @@ A layout tool that places the front and back images of an ID card on a single A4
 
 **Output:**
 - PDF with both images on single A4 page (75% width, centered)
-- File Naming based on type: IDCard_[date].pdf / Passport_[date].pdf / SinglePage_[date].pdf
+- File Naming based on type: IDCard_[timestamp].pdf / Passport_[timestamp].pdf / SinglePage_[timestamp].pdf
 - Output saved to: /storage/emulated/0/Documents/MXPlayer/PDF/
 
 **User Flow:**
 
-### Step 1: Guide Page
+### Step 1: Mode Select
+- Title: "Mode Select"
 - Camera preview with overlay card showing mock ID card layout
 - **Privacy Notice dialog** (shown on first entry): "Your ID card images are processed entirely on your device. No images are uploaded." [Cancel, Got it]
 - **3 mode options**: ID Card (2 sides), Passport (split 1 capture into 2 pages), Single Side
 - Grid toggle and flash toggle in top bar
 - "Start Scan" button
 - **Mode tabs**: "Scan" / "ID Card" tabs to switch to Scan to PDF
+- Back → returns to home
 
 ### Step 2: Capture
 - Camera with viewfinder frame (ID card aspect ratio 1.586:1)
 - Title shows "Front Side" / "Back Side"
 - After capturing front, toast: "Front side captured! Now scan the back side."
-- Album button available
+- **Album button**: For ID Card / Passport modes (2-sided), opens a 2-image picker where user must select exactly 2 images (front and back). For Single Side mode, opens a single file picker.
 - Grid and flash toggles
 - **During retake**: Scan/ID Card mode tabs hidden
+- **Back from capture (front captured, back not yet)**: Dialog: "Discard photo?" / "Your captured front side photo will not be saved." / [Cancel, Discard]
 
 ### Step 3: Preview
 - A4 page preview with front and back images (75% width, centered)
@@ -280,14 +284,15 @@ A layout tool that places the front and back images of an ID card on a single A4
 
 ---
 
-## 6. PDF to Image (Include Long Image)
+## 6. PDF to Image
 
-Two separate entry points: "PDF to Image" and "PDF to Long Image".
+Convert each page of a PDF into individual image files.
 
 **Input:** PDF file from device storage
 **Output:**
-- Individual images: each page as separate JPEG/PNG
-- Long image: all selected pages merged vertically
+- Individual images: each page exported as a separate JPEG/PNG file
+- User can select JPEG or PNG output format
+- File Naming: "[OriginalName]_page[N].[ext]"
 - Output saved to: /storage/emulated/0/Pictures/MXPlayer/[OriginalName]/
 
 **User Flow:**
@@ -306,15 +311,49 @@ Two separate entry points: "PDF to Image" and "PDF to Long Image".
 
 ### Step 3: Convert → Done
 - Progress ring
-- Done page shows: ✓, "Converted successfully!", image count, format, save path
+- Done page shows: ✓, "Images Exported", image count, format, save path
 - Preview thumbnails of converted images
 - Share and Open buttons
-- **Individual mode**: Open shows file list with thumbnails
-- **Long image mode**: Open shows full scrollable long image with Share button
+- Open shows file list with individual image thumbnails
 
 ---
 
-## 7. PDF Compress
+## 7. PDF to Long Image
+
+Convert selected pages of a PDF into a single vertically-stitched scrollable long image.
+
+**Input:** PDF file from device storage
+**Output:**
+- Single long image: all selected pages merged vertically into one image file
+- User can select JPEG or PNG output format
+- File Naming: "[OriginalName]_longimage.[ext]"
+- Output saved to: /storage/emulated/0/Pictures/MXPlayer/[OriginalName]/
+
+**User Flow:**
+
+### Step 1: Select File
+- Title: "Select File"
+- Search bar for filtering
+- PDF file list with thumbnails, name, size, date
+
+### Step 2: Select Pages
+- Title: "Select Pages"
+- Page thumbnails in grid (3 columns) with real images
+- Select All checkbox in top bar
+- Selected pages show order number badge
+- Bottom bar: Format toggle (JPEG/PNG) + "Convert (N)" button
+
+### Step 3: Convert → Done
+- Progress ring
+- Done page shows: ✓, "Images Exported", "1 long image", format, save path
+- Preview of the long image (scrollable thumbnail)
+- Share and Open buttons
+- Open shows full scrollable long image with Share button
+- Back from long image preview returns to home
+
+---
+
+## 8. PDF Compress
 
 Reduce PDF file size while maintaining acceptable quality.
 
@@ -349,7 +388,7 @@ Reduce PDF file size while maintaining acceptable quality.
 
 ---
 
-## 8. PDF Merge
+## 9. PDF Merge
 
 Combine multiple PDF files into one.
 
@@ -386,14 +425,14 @@ Combine multiple PDF files into one.
 
 ---
 
-## 9. PDF Extract (formerly Split)
+## 10. PDF Extract (formerly Split)
 
 Extract specific pages from a PDF file to create a new PDF document.
 
 **Input:** Single PDF file
 **Output:**
 - Single PDF with selected pages (in original page order)
-- File Naming: '[OriginalName]_p[pages].pdf'
+- File Naming: '[OriginalName]_extracted.pdf'
 - Output saved to: /storage/emulated/0/Documents/MXPlayer/PDF/
 
 **User Flow:**
@@ -418,26 +457,83 @@ Extract specific pages from a PDF file to create a new PDF document.
 
 ---
 
-## 10. Processing Cancel Operation
+## 11. Processing Cancel Operation
 
-**Applies to:** All PDF processing features
+When the user presses the back button or gesture, a confirmation dialog appears if there is unsaved progress. If there is nothing to lose, the user navigates back directly without a dialog.
 
-**Behavior:**
-If the user presses the back button/gesture during processing or editing:
-- Confirmation dialog appears
+### Image to PDF / Scan to PDF
 
-| Area | Feature | Dialog Title | Dialog Content | CTAs |
-|------|---------|-------------|----------------|------|
-| PDF Generate/Convert | Image to PDF, PDF to Image, Scan to PDF, ID Card Scan | Quit? | Your current progress will be lost. Are you sure you want to quit? | [Cancel, Quit] |
-| Compress | Compress PDF | Quit compressing? | Are you sure you want to quit and discard the changes? | [Cancel, Quit] |
-| Merge | Merge PDF | Quit Merging? | Are you sure you want to quit and discard the changes? | [Cancel, Quit] |
-| Extract | Extract PDF | Quit? | Are you sure you want to quit and discard the changes? | [Cancel, Quit] |
-| Capture | Scan to PDF | Discard photos? | Your captured photos will not be saved. | [Cancel, Discard] |
-| Capture | ID Card Scan | Quit? | Your current progress will be lost. Are you sure you want to quit? | [Cancel, Quit] |
+| User is on | Back behavior |
+|------------|--------------|
+| Image Picker | Direct back, no dialog |
+| Editor (has edits) | Dialog: "Quit?" / "Your current progress will be lost." / [Cancel, Quit] |
+| Preview page | Direct back to Editor (edits preserved) |
+| Progress (converting) | No cancel — wait for completion, auto-navigates to Done |
+| Done page | Direct back to home, no dialog |
+
+### Scan to PDF — Camera
+
+| User is on | Back behavior |
+|------------|--------------|
+| Camera (no photos taken) | Direct back to home |
+| Camera (has captured photos) | Dialog: "Discard photos?" / "Your captured photos will not be saved." / [Cancel, Discard] |
+
+### ID Card Scan
+
+| User is on | Back behavior |
+|------------|--------------|
+| Mode Select page | Direct back to home |
+| Camera (no photo taken) | Direct back to Mode Select (mode reset, Album & capture buttons disabled until Start Scan again) |
+| Camera (front captured, back not yet) | Dialog: "Discard photo?" / "Your captured front side photo will not be saved." / [Cancel, Discard] → Discard returns to Mode Select with mode reset |
+| Album Picker (selecting images) | Direct back to Camera |
+| Preview (has front/back) | Dialog: "Quit?" / "Your current progress will be lost." / [Cancel, Quit] |
+| Edit page | Direct back to preview (edits are saved) |
+| Progress | No cancel — wait for completion, auto-navigates to Done |
+| Done page | Direct back to home |
+
+### PDF to Image / PDF to Long Image
+
+| User is on | Back behavior |
+|------------|--------------|
+| Select File | Direct back to home |
+| Select Pages | Direct back to Select File |
+| Progress | No cancel — wait for completion, auto-navigates to Done |
+| Done page | Direct back to home |
+
+### Compress PDF
+
+| User is on | Back behavior |
+|------------|--------------|
+| Select File | Direct back to home |
+| Choose Level | Direct back to Select File |
+| Progress | No cancel — wait for completion, auto-navigates to Done |
+| Done page | Direct back to home |
+
+### Merge PDF
+
+| User is on | Back behavior |
+|------------|--------------|
+| Select Files | Direct back to home |
+| Reorder page | Direct back to Select Files |
+| Progress | No cancel — wait for completion, auto-navigates to Done |
+| Done page | Direct back to home |
+
+### Extract PDF
+
+| User is on | Back behavior |
+|------------|--------------|
+| Select File | Direct back to home |
+| Select Pages | Direct back to Select File |
+| Progress | No cancel — wait for completion, auto-navigates to Done |
+| Done page | Direct back to home |
+
+### Behavior after confirmation
+- **User confirms quit/discard**: Returns to previous screen or home, any unsaved edits are lost
+- **User cancels**: Dialog closes, stays on current page
 
 ---
 
-## 11. File Search
+## 12. File Search
 
 Support searching PDF file items in:
 - Homepage PDF file list
@@ -453,7 +549,7 @@ Support searching PDF file items in:
 
 ---
 
-## 12. All Done Pages — Unified Pattern
+## 13. All Done Pages — Unified Pattern
 
 All features follow a consistent done page pattern:
 
@@ -474,7 +570,7 @@ All features follow a consistent done page pattern:
 1. **Extract PDF** (renamed from "Split PDF"): Simplified to page selection only — no range input, no split tasks. Users tap to select pages, extract into one new PDF.
 2. **Image to PDF Editor**: Bottom bar order is Rotate → Crop → Filter → Delete → Reorder → Add → Page Size → Placement. Filter is per-image. Swipe multi-select guide on first visit.
 3. **Scan to PDF**: Default page size is Fit (Auto), not A4. Shares the same editor as Image to PDF with all tools including Page Size and Placement.
-4. **ID Card Scan**: Privacy notice is a dialog overlay (not a separate page). Edit page supports left/right swipe between front/back. Retake only re-captures single image.
+4. **ID Card Scan**: First page renamed to "Mode Select" (not "Guide"). Privacy notice is a dialog overlay. Album button opens a 2-image picker for ID Card/Passport modes (must select exactly 2). Back from capture with front captured shows discard dialog. Edit page supports left/right swipe. Retake only re-captures single image.
 5. **Merge PDF**: Reorder page has red circle minus delete + drag handle. "+ Add PDF" is inline in the list. Select All available.
 6. **Homepage**: File path removed from list view (available in Properties). Created date added to Properties. Settings simplified to Auto Crop + Default Page Size + Default Margin.
 7. **Search**: Available on all file selection pages, not just homepage. Includes search history.
