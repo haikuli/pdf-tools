@@ -37,7 +37,7 @@ export default function FinalStatus({ pdfName, pdfUrl, pdfBlob, thumbnail, onClo
     return (
       <div className="page">
         <header className="topbar">
-          <button className="btn-icon" onClick={onClose}>←</button>
+          <button className="btn-icon" onClick={() => setShowPreview(false)}>←</button>
           <h1 className="topbar-title">{fileName}</h1>
         </header>
         <embed src={`${pdfUrl}#toolbar=0`} type="application/pdf" className="pdf-iframe" />

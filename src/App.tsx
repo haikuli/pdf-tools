@@ -100,7 +100,9 @@ export default function App() {
 
   const handlePickerConfirm = (selectedIds: Set<string>) => {
     if (selectedIds.size === 0) return;
-    const selectedImages = ALL_MOCK_IMAGES.filter((img) => selectedIds.has(img.id));
+    // Preserve user's selection order
+    const idArray = Array.from(selectedIds);
+    const selectedImages = idArray.map(id => ALL_MOCK_IMAGES.find(img => img.id === id)).filter(Boolean) as typeof ALL_MOCK_IMAGES;
     if (addingFromEditor) {
       const newStartIndex = images.length;
       setImages((prev) => [...prev, ...selectedImages]);

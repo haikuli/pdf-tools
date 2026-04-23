@@ -199,9 +199,7 @@ async function main() {
   await tap(page, '.topbar .btn-primary:has-text("Done")');
   await page.waitForTimeout(PAUSE);
 
-  // FIX 4: Add — scroll editor bar to show Add button, then click
-  await page.locator('.editor-bar').evaluate(el => el.scrollLeft = 200);
-  await page.waitForTimeout(SHORT);
+  // FIX 4: Add — click directly without scrolling bar
   await tap(page, '.bar-btn:has-text("Add")');
   await page.waitForTimeout(LONG); // show the bottom sheet fully
   await tap(page, '.editor-sheet button:has-text("Album")');
@@ -246,24 +244,30 @@ async function main() {
   await tap(page, '.bottom-sheet .btn-primary:has-text("Convert")');
   await page.waitForTimeout(LONG);
   await page.waitForTimeout(LONG);
-  await page.waitForTimeout(LONG);
 
-  // Open the generated PDF and scroll
+  // Open and browse
   await tap(page, 'text=Open');
-  await page.waitForTimeout(PAUSE);
-  // Scroll the PDF preview
-  const pdfPreview = page.locator('.pdf-iframe, embed');
-  await pdfPreview.evaluate((el: HTMLElement) => el.scrollTo?.({ top: 300, behavior: 'smooth' })).catch(() => {});
-  await page.waitForTimeout(PAUSE);
+  await page.waitForTimeout(LONG);
   await page.waitForTimeout(LONG);
 
-  // Save
+  // Save - page.close() finalizes the video, then saveAs copies it
   const video = page.video();
-  if (video) {
-    await video.saveAs('./demo-videos/demo.webm');
-    console.log('✅ Video saved to ./demo-videos/demo.webm');
-  }
   await page.close();
+  await page.waitForTimeout(1000).catch(() => {});
+  if (video) {
+    try {
+      await video.saveAs('/Users/haikuli/Downloads/Kiro/image-to-pdf/demo-videos/demo2.webm');
+      console.log('✅ Video saved to demo-videos/demo2.webm');
+    } catch (e) {
+      console.log('⚠️ saveAs failed, checking temp path...');
+      try {
+        const p = await video.path();
+        console.log('Temp path:', p);
+      } catch {}
+    }
+  } else {
+    console.log('⚠️ No video object');
+  }
   await context.close();
   await browser.close();
   console.log('✅ Done');
