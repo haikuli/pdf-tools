@@ -17,6 +17,7 @@ import PdfCompress from './pages/PdfCompress';
 import PdfMerge from './pages/PdfMerge';
 import PdfSplit from './pages/PdfSplit';
 import PdfSettings from './pages/PdfSettings';
+import { track } from './utils/tracking';
 import './App.css';
 
 let idCounter = 0;
@@ -34,6 +35,7 @@ export default function App() {
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [pdfUrl, setPdfUrl] = useState('');
   const [loading, setLoading] = useState(false);
+  const [preSelectedFile, setPreSelectedFile] = useState<string | undefined>(undefined);
   const [retakeImageId, setRetakeImageId] = useState<string | null>(null);
   const [addingFromEditor, setAddingFromEditor] = useState(false);
   const [autoCropEnabled, setAutoCropEnabled] = useState(true);
@@ -119,8 +121,32 @@ export default function App() {
     setPage('editor');
   };
 
-  const handleConvert = (name: string) => { setPdfName(name); setPage('converting'); };
-  const handleScanConvert = (name: string) => { setPdfName(name); setPage('scan-converting'); };
+  const handleConvert = (name: string) => {
+    const rotated = images.filter(i => i.rotation !== 0).length;
+    const filtered = images.filter(i => i.filter && i.filter !== 'original').length;
+    const hasMargin = images.some(i => i.margin && i.margin !== 'None');
+    track('img2pdfConvert', {
+      image_count: images.length,
+      page_size: `${pageSize}_${pageOrientation}`,
+      rotated_count: rotated,
+      filtered_count: filtered,
+      has_margin: hasMargin,
+    });
+    setPdfName(name);
+    setPage('converting');
+  };
+  const handleScanConvert = (name: string) => {
+    const rotated = scanImages.filter(i => i.rotation !== 0).length;
+    const filtered = scanImages.filter(i => i.filter && i.filter !== 'original').length;
+    track('scanConvert', {
+      image_count: scanImages.length,
+      page_size: `${pageSize}_${pageOrientation}`,
+      rotated_count: rotated,
+      filtered_count: filtered,
+    });
+    setPdfName(name);
+    setPage('scan-converting');
+  };
 
   const handleConvertComplete = (blob: Blob) => {
     setPdfBlob(blob);
@@ -163,7 +189,7 @@ export default function App() {
   return (
     <div className="app-shell">
       {page === 'app-home' && <AppHome onNavigate={setPage} />}
-      {page === 'home' && <Home onNavigate={setPage} onBack={() => setPage('app-home')} />}
+      {page === 'home' && <Home onNavigate={(p, file) => { setPreSelectedFile(file); setPage(p); }} onBack={() => setPage('app-home')} />}
 
       {page === 'picker' && (
         <ImagePicker images={ALL_MOCK_IMAGES} addImages={addImages} removeImage={removeImage} onConfirm={handlePickerConfirm} loading={loading} onBack={() => { if (addingFromEditor) { setAddingFromEditor(false); setPage('editor'); } else { setPage('home'); } }} onCamera={() => setPage('picker-camera')} autoCrop={autoCropEnabled} onAutoCropChange={setAutoCropEnabled} />
@@ -199,10 +225,6 @@ export default function App() {
           onDone={() => setPage('preview')}
           onBack={() => setPage('picker')}
           onQuit={() => { setImages([]); setPage('home'); }}
-          onRetake={() => {
-            const img = images[editorIndex];
-            if (img) { setRetakeImageId(img.id); setPage('retake-camera'); }
-          }}
           onAddImage={() => { setAddingFromEditor(true); setPage('picker'); }}
           onScan={() => { setAddingFromEditor(true); setPage('picker-camera'); }}
           onReorder={() => { setReorderSnapshot([...images]); setPage('reorder'); }}
@@ -318,26 +340,26 @@ export default function App() {
 
       {/* PDF to Image */}
       {page === 'pdf2img-mode' && (
-        <PdfToImage onBack={() => setPage('home')} mode="individual" />
+        <PdfToImage onBack={() => { setPreSelectedFile(undefined); setPage('home'); }} mode="individual" preSelectedFile={preSelectedFile} />
       )}
 
       {page === 'pdf2longimg' && (
-        <PdfToImage onBack={() => setPage('home')} mode="long" />
+        <PdfToImage onBack={() => { setPreSelectedFile(undefined); setPage('home'); }} mode="long" preSelectedFile={preSelectedFile} />
       )}
 
       {/* Compress */}
       {page === 'compress-level' && (
-        <PdfCompress onBack={() => setPage('home')} />
+        <PdfCompress onBack={() => { setPreSelectedFile(undefined); setPage('home'); }} preSelectedFile={preSelectedFile} />
       )}
 
       {/* Merge */}
       {page === 'merge-select' && (
-        <PdfMerge onBack={() => setPage('home')} />
+        <PdfMerge onBack={() => { setPreSelectedFile(undefined); setPage('home'); }} preSelectedFile={preSelectedFile} />
       )}
 
       {/* Split */}
       {page === 'split-pages' && (
-        <PdfSplit onBack={() => setPage('home')} />
+        <PdfSplit onBack={() => { setPreSelectedFile(undefined); setPage('home'); }} preSelectedFile={preSelectedFile} />
       )}
 
       {page === 'pdf-settings' && (
